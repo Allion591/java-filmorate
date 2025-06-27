@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -9,14 +10,17 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
     private final Map<Long, User> users = new HashMap<>();
+    private final AtomicLong nextId = new AtomicLong(1);
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody User newUser) {
         log.info("Получена команда на создание пользователя {}", newUser);
         log.info("Пользователь прошел валидацию");
@@ -63,13 +67,8 @@ public class UserController {
     }
 
     private long getNextId() {
-        log.info("Генерация id");
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        log.info("id сгенерирован успешно");
-        return ++currentMaxId;
+        long newId = nextId.getAndIncrement();
+        log.info("Генерация id для фильма: {}", newId);
+        return newId;
     }
 }

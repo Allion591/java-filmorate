@@ -9,17 +9,18 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
     private final Map<Long, Film> films = new HashMap<>();
+    private final AtomicLong nextId = new AtomicLong(1);
 
     @PostMapping
     public Film create(@Valid @RequestBody Film newFilm) {
         log.info("Получена команда на добавление фильма {}", newFilm);
-        //validator(newFilm);
         log.info("Фильм успешно прошел валидацию");
         newFilm.setId(getNextId());
 
@@ -29,14 +30,9 @@ public class FilmController {
     }
 
     private long getNextId() {
-        log.info("Генерация id для фильма");
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        log.info("Успешная генерация id для фильма");
-        return ++currentMaxId;
+        long newId = nextId.getAndIncrement();
+        log.info("Генерация id для фильма: {}", newId);
+        return newId;
     }
 
     @PutMapping
