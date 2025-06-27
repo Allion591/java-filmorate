@@ -36,7 +36,7 @@ public class UserTest {
     @Test
     void shouldFailWhenEmailIsBlank() {
         validUser.setEmail("");
-        assertViolationContainsMessage(validUser, "Не указан адресс электронной почты");
+        assertViolationContainsMessage(validUser, "Не указан адрес электронной почты");
     }
 
     @Test

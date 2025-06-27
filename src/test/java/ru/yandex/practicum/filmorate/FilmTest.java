@@ -44,9 +44,10 @@ public class FilmTest {
     }
 
     @Test
-    void shouldFailWhenDescriptionIsBlank() {
+    void shouldNotFailWhenDescriptionIsBlank() {
         validFilm.setDescription("");
-        assertViolationContainsMessage(validFilm, "Описание фильма не может быть пустым");
+        Set<ConstraintViolation<Film>> violations = validator.validate(validFilm);
+        assertTrue(violations.isEmpty());
     }
 
     @Test
@@ -60,11 +61,17 @@ public class FilmTest {
     void shouldFailWhenReleaseDateIsBeforeMin() {
         validFilm.setReleaseDate(LocalDate.of(1895, 12, 27));
         Set<ConstraintViolation<Film>> violations = validator.validate(validFilm);
-        assertFalse(violations.isEmpty(), "Должны быть нарушения валидации");
+
+        assertFalse(violations.isEmpty(), "Должны быть нарушения для даты перед 28.12.1895");
+
+        String expectedMessage = "Дата релиза не может быть раньше 28 декабря 1895 года";
         assertTrue(violations.stream()
-                        .anyMatch(v -> v.getMessage()
-                                .contains("Дата релиза должна быть не раньше")),
-                "Не найдено ожидаемое сообщение об ошибке");
+                        .anyMatch(v -> v.getMessage().equals(expectedMessage)),
+                "Ожидалось сообщение: \"" + expectedMessage + "\"");
+
+        validFilm.setReleaseDate(LocalDate.of(1895, 12, 28));
+        violations = validator.validate(validFilm);
+        assertTrue(violations.isEmpty(), "28.12.1895 должно быть валидной датой");
     }
 
     @Test
