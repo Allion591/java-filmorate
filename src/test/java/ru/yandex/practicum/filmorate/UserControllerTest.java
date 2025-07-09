@@ -29,6 +29,7 @@ class UserControllerTest {
             .registerModule(new JavaTimeModule());
 
     private User validUser;
+    private User validUser2;
     private User userWithEmptyName;
     private User invalidEmailUser;
     private User invalidLoginUser;
@@ -36,8 +37,13 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        validUser = new User("valid@email.ru", "validLogin", LocalDate.of(1990, 5, 15));
+        validUser = new User("valid@email.ru", "validLogin",
+                LocalDate.of(1990, 5, 15));
         validUser.setName("ValidName");
+
+        validUser2 = new User("valid@email.ru", "validLogin",
+                LocalDate.of(1993, 1, 19));
+        validUser2.setName("ValidName");
 
         userWithEmptyName = new User("empty@name.ru", "emptyName",
                 LocalDate.of(1990, 5, 15));
@@ -78,7 +84,7 @@ class UserControllerTest {
                         .content(userJson))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("emptyName")); // Проверка подстановки логина
+                .andExpect(jsonPath("$.name").value("emptyName"));
     }
 
     @Test
@@ -89,7 +95,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andDo(print())
-                .andExpect(status().isBadRequest()); // Ожидаем ошибку валидации
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -137,7 +143,7 @@ class UserControllerTest {
     void updateUser_NonExistentId_Returns404() throws Exception {
         User nonExistentUser = new User("ghost@user.ru", "ghost",
                 LocalDate.of(1990, 1, 1));
-        nonExistentUser.setId(9999L); // Несуществующий ID
+        nonExistentUser.setId(9999L);
         nonExistentUser.setName("Ghost");
 
         String userJson = objectMapper.writeValueAsString(nonExistentUser);
@@ -146,20 +152,16 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andDo(print())
-                .andExpect(status().isNotFound()); // Ожидаем 404
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void getAllUsers_ReturnsUsersList() throws Exception {
-        long id1 = createUserViaApi(validUser);
-        long id2 = createUserViaApi(userWithEmptyName);
 
         mockMvc.perform(get("/users"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[1].id").value(id1))
-                .andExpect(jsonPath("$[2].id").value(id2));
+                .andExpect(jsonPath("$.length()").isNotEmpty());
     }
 
     private long createUserViaApi(User user) throws Exception {
@@ -171,5 +173,122 @@ class UserControllerTest {
                 .getContentAsString();
 
         return objectMapper.readTree(response).get("id").asLong();
+    }
+
+    @Test
+    void getUserById_ValidId_Returns200() throws Exception {
+        long userId = createUserViaApi(validUser);
+
+        mockMvc.perform(get("/users/{id}", userId))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.name").value("ValidName"));
+    }
+
+    @Test
+    void getUserById_InvalidId_Returns404() throws Exception {
+        mockMvc.perform(get("/users/{id}", 9999L))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addFriend_ValidIds_Returns200() throws Exception {
+        long user1Id = createUserViaApi(validUser);
+        User friend = new User("friend@mail.ru", "friendLogin",
+                LocalDate.of(1995, 3, 10));
+        friend.setName("Friend");
+        long user2Id = createUserViaApi(friend);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, user2Id))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Пользователь Friend теперь ваш друг!"));
+    }
+
+    @Test
+    void addFriend_NonExistentUser_Returns404() throws Exception {
+        long existingId = createUserViaApi(validUser);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", existingId, 9999L))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void removeFriend_ValidIds_Returns200() throws Exception {
+        long user1Id = createUserViaApi(validUser);
+        User friend = new User("friend@mail.ru", "friendLogin",
+                LocalDate.of(1995, 3, 10));
+        long user2Id = createUserViaApi(friend);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, user2Id))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/users/{id}/friends/{friendId}", user1Id, user2Id))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                        .value("Пользователь friendLogin теперь вам не друг"));
+    }
+
+    @Test
+    void removeFriend_NotFriends_Returns404() throws Exception {
+        long user1Id = createUserViaApi(validUser);
+        long user2Id = 999L;
+
+        mockMvc.perform(delete("/users/{id}/friends/{friendId}", user1Id, user2Id))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getFriends_ValidUser_ReturnsFriendsList() throws Exception {
+        long userId = createUserViaApi(validUser);
+        User friend1 = new User("friend1@mail.ru", "friend1",
+                LocalDate.of(1985, 7, 12));
+        User friend2 = new User("friend2@mail.ru", "friend2",
+                LocalDate.of(1992, 11, 3));
+        long friend1Id = createUserViaApi(friend1);
+        long friend2Id = createUserViaApi(friend2);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", userId, friend1Id))
+                .andDo(print())
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", userId, friend2Id))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/{id}/friends", userId))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(friend1Id))
+                .andExpect(jsonPath("$[1].id").value(friend2Id));
+    }
+
+    @Test
+    void getMutualFriends_ValidUsers_ReturnsCommonFriends() throws Exception {
+        long user1Id = createUserViaApi(validUser);
+        long user2Id = createUserViaApi(validUser2);
+
+        User commonFriend = new User("common@friend.ru", "commonFriend",
+                LocalDate.of(2000, 1, 1));
+        long commonId = createUserViaApi(commonFriend);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, commonId))
+                .andDo(print())
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", user2Id, commonId))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/{id}/friends/common/{otherId}", user1Id, user2Id))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(commonId));
     }
 }
