@@ -1,22 +1,19 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotation.ValidReleaseDate;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.service.DurationSetup;
+import java.time.*;
+import java.util.*;
 
-import java.time.Duration;
-import java.time.LocalDate;
-
-/**
- * Film.
- */
 @Data
 public class Film {
-
+    private Set<Long> likeUsersIds = new TreeSet<>();
     private Long id;
+    private Long likesCount = 0L;
 
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
@@ -36,5 +33,23 @@ public class Film {
     @AssertTrue(message = "Продолжительность должна быть положительной")
     private boolean isDurationPositive() {
         return duration != null && !duration.isNegative() && !duration.isZero();
+    }
+
+    public void addIdUserLike(Long id) {
+        if (!likeUsersIds.contains(id)) {
+            likeUsersIds.add(id);
+            likesCount = (long) likeUsersIds.size();
+        } else {
+            throw new NotFoundException("Вы уже оценивали фильм");
+        }
+    }
+
+    public void removeLike(Long id) {
+        if (likeUsersIds.contains(id)) {
+            likeUsersIds.remove(id);
+            likesCount = (long) likeUsersIds.size();
+        } else {
+            throw new NotFoundException("Вы не оценивали фильм");
+        }
     }
 }

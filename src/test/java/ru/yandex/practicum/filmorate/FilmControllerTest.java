@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import ru.yandex.practicum.filmorate.model.User;
 
 
 import java.time.Duration;
@@ -30,19 +31,28 @@ public class FilmControllerTest {
             .registerModule(new JavaTimeModule());
 
     private Film validFilm;
+    private Film validFilm2;
     private Film filmWithEmptyName;
     private Film invalidDescriptionLengthFilm;
     private Film filmWithInvalidReleaseDate;
     private Film filmWithNegativeDuration;
+    private User user;
 
     @BeforeEach
     void setUp() {
+        user = new User("user@mail.ru", "user_login", LocalDate.of(1990, 1, 1));
 
         validFilm = new Film();
         validFilm.setName("Valid Film");
         validFilm.setDescription("Normal description");
         validFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         validFilm.setDuration(Duration.ofMinutes(120));
+
+        validFilm2 = new Film();
+        validFilm2.setName("Valid Film2");
+        validFilm2.setDescription("Normal description");
+        validFilm2.setReleaseDate(LocalDate.of(2010, 7, 1));
+        validFilm2.setDuration(Duration.ofMinutes(180));
 
         filmWithEmptyName = new Film();
         filmWithEmptyName.setName("");
@@ -74,7 +84,7 @@ public class FilmControllerTest {
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validFilm)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.name").value("Valid Film"));
     }
@@ -175,8 +185,124 @@ public class FilmControllerTest {
 
         mockMvc.perform(get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$", hasSize(4)))
                 .andExpect(jsonPath("$[0].name").value("Valid Film"))
-                .andExpect(jsonPath("$[1].name").value("Another Film"));
+                .andExpect(jsonPath("$[1].name").value("Valid Film2"));
+    }
+
+    @Test
+    void getFilmById_ValidId() throws Exception {
+        MvcResult result = mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andReturn();
+
+        Film createdFilm = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                Film.class
+        );
+
+        mockMvc.perform(get("/films/{id}", createdFilm.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdFilm.getId()))
+                .andExpect(jsonPath("$.name").value("Valid Film"));
+    }
+
+    @Test
+    void getFilmById_InvalidId() throws Exception {
+        mockMvc.perform(get("/films/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value("Фильм не найден"));
+    }
+
+    @Test
+    void addLike_ValidFilmAndUser() throws Exception {
+
+        MvcResult filmResult = mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andReturn();
+        Film film = objectMapper.readValue(filmResult.getResponse().getContentAsString(), Film.class);
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andReturn();
+
+
+        mockMvc.perform(put("/films/{id}/like/{userId}", film.getId(), 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Спасибо за оценку."));
+    }
+
+    @Test
+    void addLike_InvalidFilmOrUser() throws Exception {
+        mockMvc.perform(put("/films/999/like/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value("Пользователь не найден"));
+    }
+
+    @Test
+    void removeLike_ValidLike() throws Exception {
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andReturn();
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andReturn();
+
+
+        mockMvc.perform(put("/films/{id}/like/{userId}", 1, 1));
+
+
+        mockMvc.perform(delete("/films/{id}/like/{userId}", 1, 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Лайк удален"));
+    }
+
+    @Test
+    void removeLike_InvalidLike() throws Exception {
+        mockMvc.perform(delete("/films/999/like/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value("Фильм не найден"));
+    }
+
+    @Test
+    void getPopular_ValidCount() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andReturn();
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andReturn();
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm2)))
+                .andReturn();
+
+        mockMvc.perform(put("/films/{id}/like/{userId}", 1L, 1L));
+
+        mockMvc.perform(get("/films/popular?count=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].name").value("Valid Film"));
+    }
+
+    @Test
+    void getPopular_NegativeCount() throws Exception {
+        mockMvc.perform(get("/films/popular?count=-5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Количество лайков не может быть отрицательным"));
     }
 }
