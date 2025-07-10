@@ -6,10 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.response.MessageResponse;
 import ru.yandex.practicum.filmorate.service.UserService;
-
 import java.util.Collection;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -44,13 +43,13 @@ public class UserController {
     }
 
     @PutMapping("{id}/friends/{friendId}")
-    public ResponseEntity<Map<String, String>> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        return ResponseEntity.ok(Map.of("message", userService.addFriend(id, friendId)));
+    public ResponseEntity<MessageResponse> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return ResponseEntity.ok(new MessageResponse(userService.addFriend(id, friendId)));
     }
 
     @DeleteMapping("{id}/friends/{friendId}")
-    public ResponseEntity<Map<String, String>> removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        return ResponseEntity.ok(Map.of("message", userService.removeFriend(id, friendId)));
+    public ResponseEntity<MessageResponse> removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return ResponseEntity.ok(new MessageResponse(userService.removeFriend(id, friendId)));
     }
 
     @GetMapping("/{id}/friends")

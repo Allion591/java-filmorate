@@ -2,15 +2,13 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.response.MessageResponse;
 import ru.yandex.practicum.filmorate.service.FilmService;
-
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -34,9 +32,9 @@ public class FilmController {
     }
 
     @DeleteMapping
-    public ResponseEntity<String> delete(Film film) {
+    public ResponseEntity<MessageResponse> delete(Film film) {
         filmService.delete(film);
-        return ResponseEntity.ok("Фильм " + film.getName() + " удален");
+        return ResponseEntity.ok(new MessageResponse("Фильм " + film.getName() + " удален"));
     }
 
     @GetMapping
@@ -50,15 +48,15 @@ public class FilmController {
     }
 
     @PutMapping("{id}/like/{userId}")
-    public ResponseEntity<Map<String, String>> addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public ResponseEntity<MessageResponse> addLike(@PathVariable Long id, @PathVariable Long userId) {
         filmService.addLike(id, userId);
-        return ResponseEntity.ok(Map.of("message", "Спасибо за оценку."));
+        return ResponseEntity.ok(new MessageResponse("Спасибо за оценку."));
     }
 
     @DeleteMapping("{id}/like/{userId}")
-    public ResponseEntity<Map<String, String>> removeLike(@PathVariable Long id, @PathVariable Long userId) {
+    public ResponseEntity<MessageResponse> removeLike(@PathVariable Long id, @PathVariable Long userId) {
         filmService.removeLike(id, userId);
-        return ResponseEntity.ok(Map.of("message", "Лайк удален"));
+        return ResponseEntity.ok(new MessageResponse("Лайк удален"));
     }
 
     @GetMapping("/popular")
