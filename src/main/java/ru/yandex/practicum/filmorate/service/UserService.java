@@ -3,13 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.interfaces.UserStorage;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -59,13 +56,6 @@ public class UserService {
                 .map(inMemoryUserStorage::getUserById)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-    }
-
-    public void checkUser(Long userId) {
-        log.info("Проверка на наличие пользователя");
-        if (inMemoryUserStorage.getUserById(userId) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
     }
 
     public User create(User newUser) {

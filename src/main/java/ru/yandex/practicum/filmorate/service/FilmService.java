@@ -24,7 +24,7 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
-        userService.checkUser(userId);
+        userService.getUserById(userId);
         log.info("Добавление лайка");
         Film film = inMemoryFilmStorage.getFilmById(filmId);
         film.addIdUserLike(userId);
