@@ -1,21 +1,14 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotation.ValidReleaseDate;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.service.DurationSetup;
+import java.time.*;
+import java.util.*;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.util.Set;
-import java.util.TreeSet;
-
-/**
- * Film.
- */
 @Data
 public class Film {
     private Set<Long> likeUsersIds = new TreeSet<>();
@@ -45,7 +38,7 @@ public class Film {
     public void addIdUserLike(Long id) {
         if (!likeUsersIds.contains(id)) {
             likeUsersIds.add(id);
-            likesCount++;
+            likesCount = (long) likeUsersIds.size();
         } else {
             throw new NotFoundException("Вы уже оценивали фильм");
         }
@@ -54,7 +47,7 @@ public class Film {
     public void removeLike(Long id) {
         if (likeUsersIds.contains(id)) {
             likeUsersIds.remove(id);
-            likesCount--;
+            likesCount = (long) likeUsersIds.size();
         } else {
             throw new NotFoundException("Вы не оценивали фильм");
         }
