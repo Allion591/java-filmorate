@@ -78,7 +78,7 @@ public class FilmServiceTest {
         filmService.addLike(film2.getId(), user1.getId());
         filmService.removeLike(film2.getId(), user1.getId());
 
-        assertEquals(0, film1.getLikesCount());
+        assertEquals(0, film2.getLikesCount());
     }
 
     @Test
