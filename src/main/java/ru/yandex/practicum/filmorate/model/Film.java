@@ -15,6 +15,10 @@ public class Film {
     private Long id;
     private Long likesCount = 0L;
 
+    private final Mpa mpa;
+
+    private final Genre genre;
+
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
 
