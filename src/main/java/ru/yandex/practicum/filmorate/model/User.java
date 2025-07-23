@@ -14,6 +14,8 @@ public class User {
     private Long id;
     private Set<Long> friends = new TreeSet<>();
 
+    private final Friendship friendship;
+
     @NonNull
     @Email(message = "Неверный формат электронной почты")
     @NotBlank(message = "Не указан адрес электронной почты")
