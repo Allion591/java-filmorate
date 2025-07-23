@@ -1,8 +1,14 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
+@ToString
+@EqualsAndHashCode(of = {"userId", "friendId"})
 public class Friendship {
-    private boolean status;
+    private final long userId;
+    private final long friendId;
+    private final String status;
 }
