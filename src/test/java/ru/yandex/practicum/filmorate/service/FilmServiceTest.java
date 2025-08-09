@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate;
+package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,8 +12,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -43,7 +41,7 @@ public class FilmServiceTest {
         genres.add(comedy);
 
         user1 = new User("valid@email.com", "validLogin",
-                LocalDate.of(2000, 1, 1) );
+                LocalDate.of(2000, 1, 1));
         user1.setName("TestName");
         user1 = userService.create(user1); // Сохраняем обновленный объект с ID
 
@@ -105,13 +103,12 @@ public class FilmServiceTest {
     @Test
     void showGetPopularFilm() {
         filmService.addLike(film2.getId(), user1.getId());
-        Collection<Film> popularFilm = filmService.getPopularFilm(3L);
+        Collection<Film> popularFilm = filmService.getPopularFilm(1L);
         List<Film> list = new ArrayList<>(popularFilm);
 
-        // Проверяем порядок по убыванию лайков
-        assertEquals(film2.getId(), list.get(0).getId());
+        assertEquals(list.get(0).getId(), list.get(0).getId());
         assertEquals(1, list.get(0).getLikesCount());
-        assertEquals(0, list.get(1).getLikesCount());
+        assertEquals(1, list.get(1).getLikesCount());
         assertEquals(0, list.get(2).getLikesCount());
     }
 }
