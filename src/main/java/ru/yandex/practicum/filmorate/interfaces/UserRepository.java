@@ -2,11 +2,13 @@ package ru.yandex.practicum.filmorate.interfaces;
 
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 
-public interface UserStorage {
+public interface UserRepository {
 
-    public User create(User newUser);
+    public User makeUser(ResultSet rs, int rowNum) throws SQLException;
 
     public User update(User user);
 
@@ -15,4 +17,8 @@ public interface UserStorage {
     public Collection<User> findAll();
 
     public User getUserById(long id);
+
+    public User save(User user);
+
+    public Collection<User> findCommonFriends(long userId, long otherUserId);
 }
