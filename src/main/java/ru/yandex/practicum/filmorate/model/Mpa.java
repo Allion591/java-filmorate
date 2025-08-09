@@ -4,11 +4,11 @@ import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor(force = true)
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @ToString
 @EqualsAndHashCode(of = "id")
 public class Mpa {
-    private final long id;
-    private final String name;
+    private long id;
+    private String name;
 }
