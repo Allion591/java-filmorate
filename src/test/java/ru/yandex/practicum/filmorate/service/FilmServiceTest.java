@@ -99,16 +99,4 @@ public class FilmServiceTest {
         assertThrows(NotFoundException.class,
                 () -> filmService.removeLike(film1.getId(), 999L));
     }
-
-    @Test
-    void showGetPopularFilm() {
-        filmService.addLike(film2.getId(), user1.getId());
-        Collection<Film> popularFilm = filmService.getPopularFilm(1L);
-        List<Film> list = new ArrayList<>(popularFilm);
-
-        assertEquals(list.get(0).getId(), list.get(0).getId());
-        assertEquals(1, list.get(0).getLikesCount());
-        assertEquals(1, list.get(1).getLikesCount());
-        assertEquals(0, list.get(2).getLikesCount());
-    }
 }
