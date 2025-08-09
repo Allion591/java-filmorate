@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.User;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -18,6 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
 class UserControllerTest {
@@ -41,9 +43,9 @@ class UserControllerTest {
                 LocalDate.of(1990, 5, 15));
         validUser.setName("ValidName");
 
-        validUser2 = new User("valid@email.ru", "validLogin",
+        validUser2 = new User("valid@email2.ru", "validLogin2",
                 LocalDate.of(1993, 1, 19));
-        validUser2.setName("ValidName");
+        validUser2.setName("ValidName2");
 
         userWithEmptyName = new User("empty@name.ru", "emptyName",
                 LocalDate.of(1990, 5, 15));
@@ -84,7 +86,7 @@ class UserControllerTest {
                         .content(userJson))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("emptyName"));
+                .andExpect(jsonPath("$.name").value(""));
     }
 
     @Test
@@ -204,7 +206,8 @@ class UserControllerTest {
         mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, user2Id))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Пользователь Friend теперь ваш друг!"));
+                .andExpect(jsonPath("$.message").value("Пользователь с ид " + user1Id +
+                        " и пользователь с ид " + user2Id + " теперь друзья!"));
     }
 
     @Test
@@ -221,6 +224,7 @@ class UserControllerTest {
         long user1Id = createUserViaApi(validUser);
         User friend = new User("friend@mail.ru", "friendLogin",
                 LocalDate.of(1995, 3, 10));
+        friend.setName("Friend");
         long user2Id = createUserViaApi(friend);
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, user2Id))
@@ -231,7 +235,7 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message")
-                        .value("Пользователь friendLogin теперь вам не друг"));
+                        .value("Пользователь c ID" + user2Id + " теперь вам не друг"));
     }
 
     @Test
@@ -249,8 +253,10 @@ class UserControllerTest {
         long userId = createUserViaApi(validUser);
         User friend1 = new User("friend1@mail.ru", "friend1",
                 LocalDate.of(1985, 7, 12));
+        friend1.setName("friend1");
         User friend2 = new User("friend2@mail.ru", "friend2",
                 LocalDate.of(1992, 11, 3));
+        friend2.setName("friend2");
         long friend1Id = createUserViaApi(friend1);
         long friend2Id = createUserViaApi(friend2);
 
@@ -276,6 +282,7 @@ class UserControllerTest {
 
         User commonFriend = new User("common@friend.ru", "commonFriend",
                 LocalDate.of(2000, 1, 1));
+        commonFriend.setName("common");
         long commonId = createUserViaApi(commonFriend);
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, commonId))

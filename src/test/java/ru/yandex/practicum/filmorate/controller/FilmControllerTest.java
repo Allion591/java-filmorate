@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,13 +10,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Film;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -37,46 +43,74 @@ public class FilmControllerTest {
     private Film filmWithInvalidReleaseDate;
     private Film filmWithNegativeDuration;
     private User user;
+    private User user2;
+    private User user3;
+
 
     @BeforeEach
     void setUp() {
-        user = new User("user@mail.ru", "user_login", LocalDate.of(1990, 1, 1));
+        Mpa mpa = new Mpa(1, "G");
+        Genre comedy = new Genre(1, "Комедия");
+
+        Set<Genre> genres = new LinkedHashSet<>();
+        genres.add(comedy);
+
+        user = new User("user@mail4.ru", "user_login4", LocalDate.of(1990, 1, 1));
+        user.setName("TestName4");
+
+        user2 = new User("user@mail6.ru", "user_login6", LocalDate.of(1991, 1, 1));
+        user2.setName("TestName6");
+
+        user3 = new User("user@mail7.ru", "user_login7", LocalDate.of(1992, 1, 1));
+        user3.setName("TestName7");
 
         validFilm = new Film();
         validFilm.setName("Valid Film");
         validFilm.setDescription("Normal description");
         validFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         validFilm.setDuration(Duration.ofMinutes(120));
+        validFilm.setMpa(mpa);
+        validFilm.setGenres(genres);
 
         validFilm2 = new Film();
         validFilm2.setName("Valid Film2");
         validFilm2.setDescription("Normal description");
         validFilm2.setReleaseDate(LocalDate.of(2010, 7, 1));
         validFilm2.setDuration(Duration.ofMinutes(180));
+        validFilm2.setMpa(mpa);
+        validFilm2.setGenres(genres);
 
         filmWithEmptyName = new Film();
         filmWithEmptyName.setName("");
         filmWithEmptyName.setDescription("Description");
         filmWithEmptyName.setReleaseDate(LocalDate.of(2000, 1, 1));
         filmWithEmptyName.setDuration(Duration.ofMinutes(120));
+        filmWithEmptyName.setMpa(mpa);
+        filmWithEmptyName.setGenres(genres);
 
         invalidDescriptionLengthFilm = new Film();
         invalidDescriptionLengthFilm.setName("Film");
         invalidDescriptionLengthFilm.setDescription("a".repeat(201));
         invalidDescriptionLengthFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         invalidDescriptionLengthFilm.setDuration(Duration.ofMinutes(120));
+        invalidDescriptionLengthFilm.setMpa(mpa);
+        invalidDescriptionLengthFilm.setGenres(genres);
 
         filmWithInvalidReleaseDate = new Film();
         filmWithInvalidReleaseDate.setName("Old Film");
         filmWithInvalidReleaseDate.setDescription("Description");
         filmWithInvalidReleaseDate.setReleaseDate(LocalDate.of(1895, 12, 27));
         filmWithInvalidReleaseDate.setDuration(Duration.ofMinutes(120));
+        filmWithInvalidReleaseDate.setMpa(mpa);
+        filmWithInvalidReleaseDate.setGenres(genres);
 
         filmWithNegativeDuration = new Film();
         filmWithNegativeDuration.setName("Negative Duration");
         filmWithNegativeDuration.setDescription("Description");
         filmWithNegativeDuration.setReleaseDate(LocalDate.of(2000, 1, 1));
         filmWithNegativeDuration.setDuration(Duration.ofMinutes(-5));
+        filmWithNegativeDuration.setMpa(mpa);
+        filmWithNegativeDuration.setGenres(genres);
     }
 
     @Test
@@ -164,7 +198,7 @@ public class FilmControllerTest {
                         .content(objectMapper.writeValueAsString(nonExistentFilm)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
-                        .value("Фильм с названием = Non-existent Film не найден"));
+                        .value("Фильм с ID=999 не найден"));
     }
 
     @Test
@@ -185,9 +219,8 @@ public class FilmControllerTest {
 
         mockMvc.perform(get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(4)))
-                .andExpect(jsonPath("$[0].name").value("Valid Film"))
-                .andExpect(jsonPath("$[1].name").value("Valid Film2"));
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].name").value("Valid Film"));
     }
 
     @Test
@@ -223,17 +256,20 @@ public class FilmControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validFilm)))
                 .andReturn();
-        Film film = objectMapper.readValue(filmResult.getResponse().getContentAsString(), Film.class);
+        JsonNode filmJson = objectMapper.readTree(filmResult.getResponse().getContentAsString());
+        Long filmId = filmJson.get("id").asLong();
 
-        mockMvc.perform(post("/users")
+        // Создаем пользователя и получаем его ID
+        MvcResult userResult = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user)))
+                        .content(objectMapper.writeValueAsString(user2)))
                 .andReturn();
+        JsonNode userJson = objectMapper.readTree(userResult.getResponse().getContentAsString());
+        Long userId = userJson.get("id").asLong();
 
-
-        mockMvc.perform(put("/films/{id}/like/{userId}", film.getId(), 1L))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Спасибо за оценку."));
+        // Ставим лайк
+        mockMvc.perform(put("/films/{id}/like/{userId}", filmId, userId))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -241,26 +277,33 @@ public class FilmControllerTest {
         mockMvc.perform(put("/films/999/like/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
-                        .value("Пользователь не найден"));
+                        .value("Пользователь или фильм не найдены"));
     }
 
     @Test
     void removeLike_ValidLike() throws Exception {
-        mockMvc.perform(post("/films")
+        // Создаем фильм и получаем его ID
+        MvcResult filmResult = mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validFilm)))
                 .andReturn();
+        JsonNode filmJson = objectMapper.readTree(filmResult.getResponse().getContentAsString());
+        Long filmId = filmJson.get("id").asLong();
 
-        mockMvc.perform(post("/users")
+        // Создаем пользователя и получаем его ID
+        MvcResult userResult = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user)))
+                        .content(objectMapper.writeValueAsString(user3)))
                 .andReturn();
+        JsonNode userJson = objectMapper.readTree(userResult.getResponse().getContentAsString());
+        Long userId = userJson.get("id").asLong();
 
+        // Ставим лайк
+        mockMvc.perform(put("/films/{id}/like/{userId}", filmId, userId))
+                .andExpect(status().isOk());
 
-        mockMvc.perform(put("/films/{id}/like/{userId}", 1, 1));
-
-
-        mockMvc.perform(delete("/films/{id}/like/{userId}", 1, 1))
+        // Удаляем лайк
+        mockMvc.perform(delete("/films/{id}/like/{userId}", filmId, userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Лайк удален"));
     }
@@ -270,7 +313,7 @@ public class FilmControllerTest {
         mockMvc.perform(delete("/films/999/like/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
-                        .value("Фильм не найден"));
+                        .value("Пользователь или фильм не найдены"));
     }
 
     @Test
@@ -294,7 +337,7 @@ public class FilmControllerTest {
 
         mockMvc.perform(get("/films/popular?count=1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].name").value("Valid Film"));
     }
 

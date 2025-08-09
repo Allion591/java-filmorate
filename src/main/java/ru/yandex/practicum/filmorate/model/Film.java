@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotation.ValidReleaseDate;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.service.DurationSetup;
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 public class Film {
@@ -15,9 +15,9 @@ public class Film {
     private Long id;
     private Long likesCount = 0L;
 
-    private final Mpa mpa;
+    private Mpa mpa;
 
-    private final Genre genre;
+    private Set<Genre> genre;
 
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
@@ -39,21 +39,20 @@ public class Film {
         return duration != null && !duration.isNegative() && !duration.isZero();
     }
 
-    public void addIdUserLike(Long id) {
-        if (!likeUsersIds.contains(id)) {
-            likeUsersIds.add(id);
-            likesCount = (long) likeUsersIds.size();
-        } else {
-            throw new NotFoundException("Вы уже оценивали фильм");
-        }
+    @AssertTrue(message = "Недопустимый MPA рейтинг")
+    private boolean isValidMpa() {
+        return mpa != null && mpa.getId() >= 1 && mpa.getId() <= 5;
     }
 
-    public void removeLike(Long id) {
-        if (likeUsersIds.contains(id)) {
-            likeUsersIds.remove(id);
-            likesCount = (long) likeUsersIds.size();
-        } else {
-            throw new NotFoundException("Вы не оценивали фильм");
-        }
+    public void setGenres(Set<Genre> genres) {
+        this.genre = genres != null ?
+                genres.stream()
+                        .filter(genre -> genre != null && genre.getId() != 0)
+                        .collect(Collectors.toSet()) :
+                new HashSet<>();
+    }
+
+    public Set<Genre> getGenres() {
+        return new HashSet<>(genre);
     }
 }
