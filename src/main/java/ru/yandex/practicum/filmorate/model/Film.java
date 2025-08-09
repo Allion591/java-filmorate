@@ -1,23 +1,24 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.annotation.ValidReleaseDate;
 import ru.yandex.practicum.filmorate.service.DurationSetup;
 import java.time.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Data
 public class Film {
-    private Set<Long> likeUsersIds = new TreeSet<>();
+    private Set<Like> likes = new TreeSet<>(Comparator.comparing(Like::getIdUser));
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long likesCount;
     private Long id;
-    private Long likesCount = 0L;
-
     private Mpa mpa;
-
-    private Set<Genre> genre;
+    private Set<Genre> genres = new LinkedHashSet<>();
 
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
@@ -39,20 +40,23 @@ public class Film {
         return duration != null && !duration.isNegative() && !duration.isZero();
     }
 
-    @AssertTrue(message = "Недопустимый MPA рейтинг")
-    private boolean isValidMpa() {
-        return mpa != null && mpa.getId() >= 1 && mpa.getId() <= 5;
-    }
-
-    public void setGenres(Set<Genre> genres) {
-        this.genre = genres != null ?
-                genres.stream()
-                        .filter(genre -> genre != null && genre.getId() != 0)
-                        .collect(Collectors.toSet()) :
-                new HashSet<>();
-    }
-
     public Set<Genre> getGenres() {
-        return new HashSet<>(genre);
+        return Collections.unmodifiableSet(genres);
+    }
+
+    public void addGenres(Genre genre) {
+        if (genre != null && genre.getId() != 0) {
+            this.genres.add(genre);
+        }
+    }
+
+    public Long getLikesCount() {
+        return (long) likes.size();
+    }
+
+    public void addLike(Long filmId, Long userId) {
+        if (userId != null && userId != 0) {
+            likes.add(new Like(filmId, userId));
+        }
     }
 }
