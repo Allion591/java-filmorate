@@ -48,7 +48,7 @@ public class JdbcGenreRepository implements GenreRepository {
 
     @Override
     public Collection<Genre> findAll() {
-        String sql = "SELECT * FROM genre GROUP BY genre_id";
+        String sql = "SELECT * FROM genre ORDER BY genre_id";
         return jdbcOperations.query(sql, (rs, rowNum) ->
                 new Genre(rs.getLong("genre_id"), rs.getString("genre_name")));
     }
