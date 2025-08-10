@@ -38,7 +38,7 @@ public class JdbcUserRepository implements UserRepository {
                 rs.getDate("birthday").toLocalDate()
         );
         user.setId(rs.getLong("user_id"));
-        user.setName(rs.getString("users_name"));
+        user.setName(rs.getString("name"));
 
         friendRepository.loadFriendsForUser(user);
         return user;
@@ -47,13 +47,13 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public User update(User user) {
         String sql = "UPDATE users SET email = :email, login = :login, " +
-                "users_name = :user_name, birthday = :birthday " +
+                "name = :name, birthday = :birthday " +
                 "WHERE user_id = :userId";
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("email", user.getEmail())
                 .addValue("login", user.getLogin())
-                .addValue("user_name", user.getName())
+                .addValue("name", user.getName())
                 .addValue("birthday", user.getBirthday())
                 .addValue("userId", user.getId());
 
@@ -99,12 +99,12 @@ public class JdbcUserRepository implements UserRepository {
     public User save(User user) {
         log.info("Получена команда на создание пользователя {}", user);
         log.info("Пользователь прошел валидацию");
-        String sql = "INSERT INTO users (email, login, users_name, birthday) " +
-                "VALUES (:email, :login, :users_name, :birthday)";
+        String sql = "INSERT INTO users (email, login, name, birthday) " +
+                "VALUES (:email, :login, :name, :birthday)";
         SqlParameterSource parameterSource = new MapSqlParameterSource()
                 .addValue("email", user.getEmail())
                 .addValue("login", user.getLogin())
-                .addValue("users_name", user.getName())
+                .addValue("name", user.getName())
                 .addValue("birthday", user.getBirthday());
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
