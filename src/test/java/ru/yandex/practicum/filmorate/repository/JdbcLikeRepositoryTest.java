@@ -42,9 +42,9 @@ class JdbcLikeRepositoryTest {
         jdbcTemplate.update("INSERT INTO films (film_id, films_name, description, release_date, duration, mpa_id) " +
                 "VALUES (?, 'Film 2', 'Desc', '2000-01-01', 120, 1)", filmId2);
 
-        jdbcTemplate.update("INSERT INTO users (user_id, email, login, users_name, birthday) " +
+        jdbcTemplate.update("INSERT INTO users (user_id, email, login, name, birthday) " +
                 "VALUES (?, 'user1@mail.com', 'login1', 'User 1', '1990-01-01')", userId1);
-        jdbcTemplate.update("INSERT INTO users (user_id, email, login, users_name, birthday) " +
+        jdbcTemplate.update("INSERT INTO users (user_id, email, login, name, birthday) " +
                 "VALUES (?, 'user2@mail.com', 'login2', 'User 2', '1990-01-01')", userId2);
     }
 
