@@ -124,7 +124,7 @@ public class JdbcFriendRepository implements FriendRepository {
                     rs.getDate("birthday").toLocalDate()
             );
             user.setId(rs.getLong("user_id"));
-            user.setName(rs.getString("users_name"));
+            user.setName(rs.getString("name"));
             return user;
         });
     }
