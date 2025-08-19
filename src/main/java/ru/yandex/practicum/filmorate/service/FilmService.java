@@ -3,69 +3,84 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.interfaces.FilmStorage;
+import ru.yandex.practicum.filmorate.interfaces.FilmRepository;
+import ru.yandex.practicum.filmorate.interfaces.GenreRepository;
+import ru.yandex.practicum.filmorate.interfaces.LikeRepository;
+import ru.yandex.practicum.filmorate.interfaces.MpaRepository;
 import ru.yandex.practicum.filmorate.model.Film;
-
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.repository.JdbcLikeRepository;
+import ru.yandex.practicum.filmorate.repository.JdbcMpaRepository;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class FilmService {
 
-    private final FilmStorage inMemoryFilmStorage;
+    private final FilmRepository filmRepository;
     private final UserService userService;
+    private final MpaRepository mpaRepository;
+    private final GenreRepository genreRepository;
+    private final LikeRepository likeRepository;
 
     @Autowired
-    public FilmService(FilmStorage inMemoryFilmStorage, UserService userService) {
-        this.inMemoryFilmStorage = inMemoryFilmStorage;
+    public FilmService(FilmRepository filmRepository, UserService userService, JdbcMpaRepository mpaRepository,
+                       GenreRepository genreRepository, JdbcLikeRepository likeRepository) {
+        this.filmRepository = filmRepository;
         this.userService = userService;
+        this.mpaRepository = mpaRepository;
+        this.genreRepository = genreRepository;
+        this.likeRepository = likeRepository;
     }
 
     public void addLike(Long filmId, Long userId) {
-        userService.getUserById(userId);
         log.info("Добавление лайка");
-        Film film = inMemoryFilmStorage.getFilmById(filmId);
-        film.addIdUserLike(userId);
+        likeRepository.addLike(filmId, userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        Film film = inMemoryFilmStorage.getFilmById(filmId);
         log.info("Удаление лайка");
-        film.removeLike(userId);
+        likeRepository.removeLike(filmId, userId);
     }
 
     public Collection<Film> getPopularFilm(Long count) {
-        long limit = (count == null) ? 10 : count;
-
-        log.info("Получение популярных фильмов в количестве: " + limit);
-        return inMemoryFilmStorage.findAll().stream()
-                .sorted(Comparator.comparing(
-                        Film::getLikesCount,
-                        Comparator.nullsLast(Comparator.reverseOrder())
-                ))
-                .limit(limit)
-                .collect(Collectors.toList());
+        return filmRepository.findPopularFilms(count);
     }
 
     public Film create(Film newFilm) {
-        return inMemoryFilmStorage.create(newFilm);
+        return filmRepository.save(newFilm);
     }
 
     public Film update(Film film) {
-        return inMemoryFilmStorage.update(film);
+        return filmRepository.update(film);
     }
 
     public void delete(Film film) {
-        inMemoryFilmStorage.delete(film);
+        filmRepository.deleteById(film.getId());
     }
 
     public Collection<Film> findAll() {
-        return inMemoryFilmStorage.findAll();
+        return filmRepository.findAll();
     }
 
     public Film getFilmById(Long id) {
-        return inMemoryFilmStorage.getFilmById(id);
+        return filmRepository.getFilmById(id);
+    }
+
+    public Mpa getMpaNameById(Long id) {
+        return mpaRepository.findById(id);
+    }
+
+    public Collection<Mpa> mpaGetAll() {
+        return mpaRepository.mpaGetAll();
+    }
+
+    public Genre getGenreNameById(Long id) {
+        return genreRepository.findById(id);
+    }
+
+    public Collection<Genre> genreGetAll() {
+        return genreRepository.findAll();
     }
 }
