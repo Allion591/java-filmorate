@@ -27,7 +27,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         JdbcGenreRepository.class,
         JdbcLikeRepository.class,
         JdbcUserRepository.class,
-        JdbcFriendRepository.class
+        JdbcFriendRepository.class,
+        JdbcDirectorRepository.class
 })
 @DisplayName("JdbcFilmRepositoryTest")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
