@@ -84,6 +84,11 @@ public class FilmService {
         return genreRepository.findAll();
     }
 
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        log.info("Запрос общих фильмов пользователей {} и {}", userId, friendId);
+        return filmRepository.findCommonFilms(userId, friendId);
+    }
+
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
         return filmRepository.getFilmsByDirectorId(directorId, sortBy);
     }
