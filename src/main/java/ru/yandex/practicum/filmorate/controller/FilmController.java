@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -10,6 +11,7 @@ import ru.yandex.practicum.filmorate.response.MessageResponse;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/films")
@@ -19,6 +21,7 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<Film> create(@Valid @RequestBody Film newFilm) {
+        log.info("Создаю фильм : {}", newFilm);
         return new ResponseEntity<>(filmService.create(newFilm), HttpStatus.CREATED);
     }
 
@@ -62,5 +65,20 @@ public class FilmController {
         } else {
             return new ResponseEntity<>(filmService.getPopularFilm(count), HttpStatus.OK);
         }
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getFilmsByDirectorIdSortedByLikesOrYear(
+            @PathVariable int directorId,
+            @RequestParam(required = false, defaultValue = "likes") String sortBy) {
+
+        log.info("Запрос списка фильмов режиссера с сортировкой: directorId={}, sortBy={}", directorId, sortBy);
+
+        if (!"likes".equalsIgnoreCase(sortBy) && !"year".equalsIgnoreCase(sortBy)) {
+            log.warn("Недопустимое значение параметра sortBy: {}", sortBy);
+            throw new IllegalArgumentException("Параметр sortBy может принимать значения 'likes' или 'year'");
+        }
+
+        return filmService.getFilmsByDirectorId(directorId, sortBy.toLowerCase());
     }
 }
