@@ -66,7 +66,7 @@ public class FilmController {
             return new ResponseEntity<>(filmService.getPopularFilm(count), HttpStatus.OK);
         }
     }
-//в
+
     @GetMapping("/common")
     public ResponseEntity<Collection<Film>> getCommonFilms(@RequestParam Long userId,
                                                            @RequestParam Long friendId) {
