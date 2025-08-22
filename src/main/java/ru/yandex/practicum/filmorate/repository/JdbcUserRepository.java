@@ -79,7 +79,7 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public Collection<User> findAll() {
-        String sql = "SELECT * FROM users";
+        String sql = "SELECT * FROM users ORDER BY user_id";
         return jdbcOperations.query(sql, this::makeUser);
     }
 
