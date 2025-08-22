@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.interfaces.DirectorRepository;
+import ru.yandex.practicum.filmorate.response.MessageResponse;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -20,9 +21,9 @@ public class DirectorController {
     private final DirectorRepository directorRepository;
 
     @GetMapping
-    public Collection<Director> findAll() {
+    public ResponseEntity<Collection<Director>> findAll() {
         log.debug("Запрос всех режиccёров");
-        return directorRepository.findAll();
+        return new ResponseEntity<>(directorRepository.findAll(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -46,8 +47,9 @@ public class DirectorController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteDirector(@PathVariable int id) {
+    public ResponseEntity<MessageResponse> deleteDirector(@PathVariable int id) {
         log.info("Удаление режиссера с ID: {}", id);
         directorRepository.deleteDirector(id);
+        return ResponseEntity.ok(new MessageResponse("Режиссер удален"));
     }
 }
