@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.response.MessageResponse;
 import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.Collection;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,7 +29,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<Collection<User>> findAll() {
+    public ResponseEntity<List<User>> findAll() {
         return new ResponseEntity<>(userService.findAll(), HttpStatus.OK);
     }
 
