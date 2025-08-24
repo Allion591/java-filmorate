@@ -1,3 +1,21 @@
+-- Чистим все таблицы
+TRUNCATE TABLE review_like CASCADE;
+TRUNCATE TABLE review CASCADE;
+TRUNCATE TABLE film_directors CASCADE;
+TRUNCATE TABLE directors CASCADE;
+TRUNCATE TABLE film_genre CASCADE;
+TRUNCATE TABLE likes CASCADE;
+TRUNCATE TABLE friendship CASCADE;
+TRUNCATE TABLE films CASCADE;
+TRUNCATE TABLE users CASCADE;
+
+-- Сбрасываем IDENTITY (чтобы id всегда начинались с 1)
+ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1;
+ALTER TABLE films ALTER COLUMN film_id RESTART WITH 1;
+ALTER TABLE directors ALTER COLUMN director_id RESTART WITH 1;
+ALTER TABLE review ALTER COLUMN review_id RESTART WITH 1;
+
+
 MERGE INTO genre (genre_id, genre_name) KEY(genre_id)
 VALUES
   (1, 'Комедия'),
