@@ -83,4 +83,8 @@ public class FilmService {
     public Collection<Genre> genreGetAll() {
         return genreRepository.findAll();
     }
+
+    public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
+        return filmRepository.getFilmsByDirectorId(directorId, sortBy);
+    }
 }
