@@ -14,12 +14,3 @@ VALUES
     (3, 'PG-13'),
     (4, 'R'),
     (5, 'NC-17');
-
-INSERT INTO users (id, email, login, name, birthday)
-VALUES
-    (1, 'user@mail.com', 'user_login', 'Test User', '1990-01-01');
-
-INSERT INTO users (email, login, name, birthday)
-VALUES
-    ('user2@mail.com', 'user_login2', 'Second User', '1991-02-02'),
-    ('user3@mail.com', 'user_login3', 'Third User', '1992-03-03');
