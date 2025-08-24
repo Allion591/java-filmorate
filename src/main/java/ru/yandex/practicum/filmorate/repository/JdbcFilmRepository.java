@@ -357,4 +357,58 @@ public class JdbcFilmRepository implements FilmRepository {
         Map<String, Object> params = Map.of("directorId", directorId);
         return jdbcOperations.query(sql, params, filmsExtractor);
     }
+
+    @Override
+    public Collection<Film> searchFilmsByTitle(String query) {
+        String sql = "SELECT f.*, m.mpa_name, g.genre_id, g.genre_name, d.director_id, d.director_name, l.user_id, " +
+                "COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
+                "FROM films f " +
+                "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
+                "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "WHERE (:query = '' OR LOWER(f.films_name) LIKE LOWER('%' || :query || '%')) " +
+                "ORDER BY likes_count DESC, f.film_id";
+
+        MapSqlParameterSource params = new MapSqlParameterSource("query", query);
+        return jdbcOperations.query(sql, params, filmsExtractor);
+    }
+
+    @Override
+    public Collection<Film> searchFilmsByDirector(String query) {
+        String sql = "SELECT f.*, m.mpa_name, g.genre_id, g.genre_name, d.director_id, d.director_name, l.user_id, " +
+                "COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
+                "FROM films f " +
+                "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
+                "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "WHERE (:query = '' OR LOWER(d.director_name) LIKE LOWER('%' || :query || '%')) " +
+                "ORDER BY likes_count DESC, f.film_id";
+
+        MapSqlParameterSource params = new MapSqlParameterSource("query", query);
+        return jdbcOperations.query(sql, params, filmsExtractor);
+    }
+
+    @Override
+    public Collection<Film> searchFilmsByTitleAndDirector(String query) {
+        String sql = "SELECT f.*, m.mpa_name, g.genre_id, g.genre_name, d.director_id, d.director_name, l.user_id, " +
+                "COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
+                "FROM films f " +
+                "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
+                "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "WHERE (:query = '' OR (LOWER(f.films_name) LIKE LOWER('%' || :query || '%') OR LOWER(d.director_name) LIKE LOWER('%' || :query || '%'))) " +
+                "ORDER BY likes_count DESC, f.film_id";
+
+        MapSqlParameterSource params = new MapSqlParameterSource("query", query);
+        return jdbcOperations.query(sql, params, filmsExtractor);
+    }
 }
