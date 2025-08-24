@@ -245,7 +245,6 @@ public class JdbcFilmRepository implements FilmRepository {
         return getFilmById(film.getId());
     }
 
-
     @Override
     public void deleteById(Long id) {
         log.info("Удаляю фильм : {}", id);
@@ -294,6 +293,46 @@ public class JdbcFilmRepository implements FilmRepository {
         MapSqlParameterSource params = new MapSqlParameterSource("count", count);
         return jdbcOperations.query(sql, params, filmsExtractor);
     }
+
+    @Override
+    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
+        String sql = """
+                  SELECT
+                    f.film_id,
+                    f.films_name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.mpa_id,
+                    m.mpa_name,
+                    g.genre_id,
+                    g.genre_name,
+                    d.director_id,
+                    d.director_name,
+                    l.user_id AS liked_user_id
+                FROM films f
+                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
+                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+                LEFT JOIN genre g ON fg.genre_id = g.genre_id
+                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE EXISTS (
+                    SELECT 1 FROM likes l1 WHERE l1.film_id = f.film_id AND l1.user_id = :userId
+                )
+                AND EXISTS (
+                    SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = :friendId
+                )
+                ORDER BY f.film_id;
+               """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("friendId", friendId);
+
+        return jdbcOperations.query(sql, params, filmsExtractor);
+    }
+
 
     @Override
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
