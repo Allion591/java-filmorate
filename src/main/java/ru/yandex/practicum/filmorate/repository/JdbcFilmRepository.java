@@ -324,8 +324,7 @@ public class JdbcFilmRepository implements FilmRepository {
                     SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = :friendId
                 )
                 ORDER BY f.film_id;
-                
-                """;
+               """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("userId", userId)
