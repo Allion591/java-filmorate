@@ -196,7 +196,7 @@ public class FilmControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(nonExistentFilm)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Фильм с ID=999 не найден"));
     }
 
@@ -244,7 +244,7 @@ public class FilmControllerTest {
     void getFilmById_InvalidId() throws Exception {
         mockMvc.perform(get("/films/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Фильм не найден"));
     }
 
@@ -275,7 +275,7 @@ public class FilmControllerTest {
     void addLike_InvalidFilmOrUser() throws Exception {
         mockMvc.perform(put("/films/999/like/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Пользователь или фильм не найдены"));
     }
 
@@ -311,7 +311,7 @@ public class FilmControllerTest {
     void removeLike_InvalidLike() throws Exception {
         mockMvc.perform(delete("/films/999/like/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Пользователь или фильм не найдены"));
     }
 

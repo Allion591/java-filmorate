@@ -40,6 +40,8 @@ public class Film {
         return duration != null && !duration.isNegative() && !duration.isZero();
     }
 
+    private Set<Director> directors = new HashSet<>();
+
     public Set<Genre> getGenres() {
         return Collections.unmodifiableSet(genres);
     }

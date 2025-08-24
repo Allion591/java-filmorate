@@ -18,4 +18,6 @@ public interface FilmRepository {
     public void deleteById(Long id);
 
     public Collection<Film> findPopularFilms(Long count);
+
+    public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy);
 }
