@@ -53,7 +53,7 @@ public class UserService {
         return userRepository.delete(user);
     }
 
-    public List<User> findAll() {
+    public Collection<User> findAll() {
         return userRepository.findAll();
     }
 

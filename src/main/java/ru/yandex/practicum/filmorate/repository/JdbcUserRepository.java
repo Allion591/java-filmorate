@@ -18,7 +18,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -79,7 +78,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    public List<User> findAll() {
+    public Collection<User> findAll() {
         String sql = "SELECT * FROM users ORDER BY user_id";
         return jdbcOperations.query(sql, this::makeUser);
     }

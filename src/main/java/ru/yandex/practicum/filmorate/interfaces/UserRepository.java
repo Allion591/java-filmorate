@@ -5,7 +5,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.List;
 
 public interface UserRepository {
 
@@ -15,7 +14,7 @@ public interface UserRepository {
 
     public String delete(User user);
 
-    public List<User> findAll();
+    public Collection<User> findAll();
 
     public User getUserById(long id);
 
