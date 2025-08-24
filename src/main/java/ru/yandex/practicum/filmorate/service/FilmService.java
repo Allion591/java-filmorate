@@ -87,4 +87,16 @@ public class FilmService {
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
         return filmRepository.getFilmsByDirectorId(directorId, sortBy);
     }
+
+    public Collection<Film> searchFilmsByTitle(String query) {
+        return filmRepository.searchFilmsByTitle(query);
+    }
+
+    public Collection<Film> searchFilmsByDirector(String query) {
+        return filmRepository.searchFilmsByDirector(query);
+    }
+
+    public Collection<Film> searchFilmsByTitleAndDirector(String query) {
+        return filmRepository.searchFilmsByTitleAndDirector(query);
+    }
 }
