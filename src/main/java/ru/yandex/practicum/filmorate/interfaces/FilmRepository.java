@@ -21,6 +21,5 @@ public interface FilmRepository {
 
     public Collection<Film> findCommonFilms(Long userId, Long friendId);
 
-
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy);
 }
