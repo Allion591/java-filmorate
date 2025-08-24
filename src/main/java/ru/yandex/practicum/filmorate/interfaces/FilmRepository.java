@@ -20,4 +20,10 @@ public interface FilmRepository {
     public Collection<Film> findPopularFilms(Long count);
 
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy);
+
+    public Collection<Film> searchFilmsByTitle(String query);
+
+    public Collection<Film> searchFilmsByDirector(String query);
+
+    public Collection<Film> searchFilmsByTitleAndDirector(String query);
 }
