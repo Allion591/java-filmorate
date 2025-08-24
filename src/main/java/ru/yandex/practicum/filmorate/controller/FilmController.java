@@ -89,4 +89,39 @@ public class FilmController {
 
         return filmService.getFilmsByDirectorId(directorId, sortBy.toLowerCase());
     }
+
+    @GetMapping("/search")
+    public Collection<Film> searchFilms(@RequestParam String query,
+                                        @RequestParam(required = false) String by) {
+        log.info("Поиск фильмов по запросу: '{}', критерии: {}", query, by);
+
+        if (by == null) {
+            by = "title,director";
+        }
+
+        String[] criteria = by.split(",");
+        boolean searchTitle = false;
+        boolean searchDirector = false;
+
+        for (String criterion : criteria) {
+            if ("title".equalsIgnoreCase(criterion.trim())) {
+                searchTitle = true;
+            } else if ("director".equalsIgnoreCase(criterion.trim())) {
+                searchDirector = true;
+            }
+        }
+
+        if (!searchTitle && !searchDirector) {
+            searchTitle = true;
+            searchDirector = true;
+        }
+
+        if (searchTitle && searchDirector) {
+            return filmService.searchFilmsByTitleAndDirector(query);
+        } else if (searchTitle) {
+            return filmService.searchFilmsByTitle(query);
+        } else {
+            return filmService.searchFilmsByDirector(query);
+        }
+    }
 }
