@@ -5,10 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.response.MessageResponse;
+import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.UserService;
- import java.util.Collection;
+import java.util.Collection;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -17,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final FeedService feedService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -65,5 +69,10 @@ public class UserController {
     @GetMapping("{id}/friends/common/{otherId}")
     public ResponseEntity<Collection<User>> getMutualFriends(@PathVariable Long id, @PathVariable Long otherId) {
         return new ResponseEntity<>(userService.getMutualFriends(id, otherId), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/feed")
+    public ResponseEntity<Collection<FeedEvent>> getFeed(@PathVariable long id) {
+        return new ResponseEntity<>(feedService.getFeedEvents(id), HttpStatus.OK);
     }
 }
