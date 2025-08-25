@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,8 +15,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
@@ -29,6 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class FilmControllerTest {
 
     @Autowired
@@ -202,7 +205,6 @@ public class FilmControllerTest {
     }
 
     @Test
-    @Disabled
     void getAllFilms() throws Exception {
 
         mockMvc.perform(post("/films")
@@ -214,13 +216,15 @@ public class FilmControllerTest {
         anotherFilm.setDescription("Another description");
         anotherFilm.setReleaseDate(LocalDate.of(2010, 5, 15));
         anotherFilm.setDuration(Duration.ofMinutes(90));
+        // set required MPA so repository.save() doesn't fail
+        anotherFilm.setMpa(new Mpa(1, "G"));
         mockMvc.perform(post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(anotherFilm)));
 
         mockMvc.perform(get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].name").value("Valid Film"));
     }
 
@@ -251,7 +255,6 @@ public class FilmControllerTest {
     }
 
     @Test
-    @Disabled
     void addLike_ValidFilmAndUser() throws Exception {
 
         MvcResult filmResult = mockMvc.perform(post("/films")
@@ -283,7 +286,6 @@ public class FilmControllerTest {
     }
 
     @Test
-    @Disabled
     void removeLike_ValidLike() throws Exception {
         // Создаем фильм и получаем его ID
         MvcResult filmResult = mockMvc.perform(post("/films")
@@ -320,7 +322,6 @@ public class FilmControllerTest {
     }
 
     @Test
-    @Disabled
     void getPopular_ValidCount() throws Exception {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
