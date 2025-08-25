@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.response.MessageResponse;
 import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.Collection;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
@@ -35,6 +37,14 @@ public class UserController {
     @GetMapping(value = {"/{id}"})
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         return new ResponseEntity<>(userService.getUserById(id), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<MessageResponse> delete(@PathVariable Long userId) {
+        log.info("Запрос на удаление пользователя с id={}", userId);
+        userService.delete(userId);
+        log.info("Пользователь с id={} успешно удалён", userId);
+        return ResponseEntity.ok(new MessageResponse("Пользователь с id=" + userId + " удален"));
     }
 
     @PutMapping("{id}/friends/{friendId}")

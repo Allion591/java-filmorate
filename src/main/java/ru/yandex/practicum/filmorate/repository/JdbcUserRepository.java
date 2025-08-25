@@ -65,16 +65,22 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    public String delete(User user) {
-        String sql = "DELETE FROM friendship WHERE user_id = :userId OR friend_id = :userId";
+    public void deleteById(Long id) {
+        // Удаляем дружбы, где пользователь фигурирует с любой стороны
+        String deleteFriendships = "DELETE FROM friendship WHERE user_id = :userId OR friend_id = :userId";
+        SqlParameterSource params = new MapSqlParameterSource("userId", id);
+        jdbcOperations.update(deleteFriendships, params);
 
-        SqlParameterSource params = new MapSqlParameterSource("userId", user.getId());
-        jdbcOperations.update(sql, params);
+        // Удаляем лайки, поставленные пользователем
+        String deleteLikes = "DELETE FROM likes WHERE user_id = :userId";
+        jdbcOperations.update(deleteLikes, params);
 
-        String deleteUserSql = "DELETE FROM users WHERE user_id = :userId";
-        jdbcOperations.update(deleteUserSql, params);
-
-        return "Пользователь " + user.getId() + " удалён";
+        // Удаляем самого пользователя
+        String deleteUser = "DELETE FROM users WHERE user_id = :userId";
+        int deleted = jdbcOperations.update(deleteUser, params);
+        if (deleted == 0) {
+            throw new NotFoundException("Пользователь с ID=" + id + " не найден");
+        }
     }
 
     @Override
