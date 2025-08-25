@@ -22,13 +22,13 @@ public class FilmController {
     @PostMapping
     public ResponseEntity<Film> create(@Valid @RequestBody Film newFilm) {
         log.info("Создаю фильм : {}", newFilm);
-        return ResponseEntity.status(HttpStatus.CREATED).body(filmService.create(newFilm));
+        return new ResponseEntity<>(filmService.create(newFilm), HttpStatus.CREATED);
     }
 
     @PutMapping
     public ResponseEntity<Film> update(@Valid @RequestBody Film film) {
         log.info("Обновляю фильм: {}", film);
-        return ResponseEntity.ok(filmService.update(film));
+        return new ResponseEntity<>(filmService.update(film), HttpStatus.OK);
     }
 
     @DeleteMapping("/{filmId}")
@@ -39,17 +39,16 @@ public class FilmController {
         return ResponseEntity.ok(new MessageResponse("Фильм с id=" + filmId + " удален"));
     }
 
-
     @GetMapping
     public ResponseEntity<Collection<Film>> findAll() {
         log.info("Запрос списка всех фильмов");
-        return ResponseEntity.ok(filmService.findAll());
+        return new ResponseEntity<>(filmService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Film> getFilmById(@PathVariable Long id) {
         log.info("Запрос фильма по id={}", id);
-        return ResponseEntity.ok(filmService.getFilmById(id));
+        return new ResponseEntity<>(filmService.getFilmById(id), HttpStatus.OK);
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -88,7 +87,7 @@ public class FilmController {
                                                            @RequestParam Long friendId) {
         log.info("Запрос общих фильмов: userId={}, friendId={}", userId, friendId);
         Collection<Film> films = filmService.getCommonFilms(userId, friendId);
-        return ResponseEntity.ok(films);
+        return new ResponseEntity<>(films, HttpStatus.OK);
     }
 
 
