@@ -184,6 +184,122 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     @Override
+    public Collection<Film> findPopularFilms(Long count) {
+        log.info("Получаю популярные фильмы: {}", count);
+        String sql = "SELECT " +
+                "f.film_id, " +
+                "f.films_name, " +
+                "f.description, " +
+                "f.release_date, " +
+                "f.duration, " +
+                "f.mpa_id, " +
+                "m.mpa_name, " +
+                "g.genre_id, " +
+                "g.genre_name, " +
+                "d.director_id, " +
+                "d.director_name, " +
+                "l.user_id, " +
+                "COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
+                "FROM films f " +
+                "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
+                "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "ORDER BY likes_count DESC, f.film_id";
+
+        return jdbcOperations.query(sql, filmsExtractor);
+    }
+
+    @Override
+    public Collection<Film> findPopular(Integer count, Integer genreId, Integer year) {
+        log.info("Получаю популярные фильмы c фильтрами: count={}, genreId={}, year={}", count, genreId, year);
+        String sql = """
+                WITH filtered AS (
+                    SELECT f.film_id, COUNT(l.user_id) AS likes_count
+                    FROM films f
+                    LEFT JOIN likes l ON l.film_id = f.film_id
+                    LEFT JOIN film_genre fg ON fg.film_id = f.film_id
+                    WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
+                      AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
+                    GROUP BY f.film_id
+                    ORDER BY likes_count DESC, f.film_id
+                    LIMIT :count
+                )
+                SELECT
+                    f.film_id,
+                    f.films_name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.mpa_id,
+                    m.mpa_name,
+                    g.genre_id,
+                    g.genre_name,
+                    d.director_id,
+                    d.director_name,
+                    l.user_id
+                FROM filtered t
+                JOIN films f ON f.film_id = t.film_id
+                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
+                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+                LEFT JOIN genre g ON fg.genre_id = g.genre_id
+                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                ORDER BY t.likes_count DESC, f.film_id
+                """;
+
+        int limit = (count == null || count <= 0) ? 10 : count;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("count", limit)
+                .addValue("genreId", genreId)
+                .addValue("year", year);
+        return jdbcOperations.query(sql, params, filmsExtractor);
+    }
+
+    @Override
+    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
+        log.info("Получаю общие фильмы для пользователей userId={}, friendId={}", userId, friendId);
+        String sql = """
+                SELECT
+                  f.film_id,
+                  f.films_name,
+                  f.description,
+                  f.release_date,
+                  f.duration,
+                  f.mpa_id,
+                  m.mpa_name,
+                  g.genre_id,
+                  g.genre_name,
+                  d.director_id,
+                  d.director_name,
+                  l.user_id
+                FROM films f
+                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
+                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+                LEFT JOIN genre g ON fg.genre_id = g.genre_id
+                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE EXISTS (
+                    SELECT 1 FROM likes l1 WHERE l1.film_id = f.film_id AND l1.user_id = :userId
+                )
+                AND EXISTS (
+                    SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = :friendId
+                )
+                ORDER BY f.film_id
+                """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("friendId", friendId);
+
+        return jdbcOperations.query(sql, params, filmsExtractor);
+    }
+
+    @Override
     public Film save(Film film) {
         mpaRepository.findById(film.getMpa().getId());
         log.info("Сохраняю фильм : {}", film);
@@ -248,94 +364,24 @@ public class JdbcFilmRepository implements FilmRepository {
 
     @Override
     public void deleteById(Long id) {
-        log.info("Удаляю фильм : {}", id);
-        String deleteGenresSql = "DELETE FROM film_genre WHERE film_id = :film_id";
-        jdbcOperations.update(deleteGenresSql, new MapSqlParameterSource("film_id", id));
+      log.info("Удаляю фильм : {}", id);
+      String deleteGenresSql = "DELETE FROM film_genre WHERE film_id = :film_id";
+      jdbcOperations.update(deleteGenresSql, new MapSqlParameterSource("film_id", id));
 
-        String deleteLikesSql = "DELETE FROM likes WHERE film_id = :id";
-        jdbcOperations.update(deleteLikesSql, new MapSqlParameterSource("id", id));
+      String deleteLikesSql = "DELETE FROM likes WHERE film_id = :id";
+      jdbcOperations.update(deleteLikesSql, new MapSqlParameterSource("id", id));
 
-        String deleteDirectorsSql = "DELETE FROM film_directors WHERE film_id = :film_id";
-        jdbcOperations.update(deleteDirectorsSql, new MapSqlParameterSource("film_id", id));
+      String deleteDirectorsSql = "DELETE FROM film_directors WHERE film_id = :film_id";
+      jdbcOperations.update(deleteDirectorsSql, new MapSqlParameterSource("film_id", id));
 
-        String deleteFilmSql = "DELETE FROM films WHERE film_id = :id";
-        int deleted = jdbcOperations.update(deleteFilmSql, new MapSqlParameterSource("id", id));
+      String deleteFilmSql = "DELETE FROM films WHERE film_id = :id";
+      int deleted = jdbcOperations.update(deleteFilmSql, new MapSqlParameterSource("id", id));
 
-        if (deleted == 0) {
-            throw new NotFoundException("Фильм с ID=" + id + " не найден");
-        }
-    }
-
-
-
-    public Collection<Film> findPopularFilms(Long count) {
-        log.info("Получаю популярные фильмы: {}", count);
-        String sql = "SELECT " +
-                "   f.film_id, " +
-                "   f.films_name, " +
-                "   f.description, " +
-                "   f.release_date, " +
-                "   f.duration, " +
-                "   f.mpa_id, " +
-                "   g.genre_id, " +
-                "   g.genre_name, " +
-                "   m.mpa_name, " +
-                "   l.user_id, " +
-                "   d.director_id, " +
-                "   d.director_name, " +
-                "   COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
-                "FROM films f " +
-                "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
-                "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
-                "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
-                "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
-                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
-                "ORDER BY likes_count DESC, f.film_id ";
-
-        MapSqlParameterSource params = new MapSqlParameterSource("count", count);
-        return jdbcOperations.query(sql, params, filmsExtractor);
-    }
-
-    @Override
-    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
-        String sql = """
-                  SELECT
-                    f.film_id,
-                    f.films_name,
-                    f.description,
-                    f.release_date,
-                    f.duration,
-                    f.mpa_id,
-                    m.mpa_name,
-                    g.genre_id,
-                    g.genre_name,
-                    d.director_id,
-                    d.director_name,
-                    l.user_id AS liked_user_id
-                FROM films f
-                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
-                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
-                LEFT JOIN genre g ON fg.genre_id = g.genre_id
-                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
-                LEFT JOIN directors d ON fd.director_id = d.director_id
-                LEFT JOIN likes l ON f.film_id = l.film_id
-                WHERE EXISTS (
-                    SELECT 1 FROM likes l1 WHERE l1.film_id = f.film_id AND l1.user_id = :userId
-                )
-                AND EXISTS (
-                    SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = :friendId
-                )
-                ORDER BY f.film_id;
-               """;
-
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("friendId", friendId);
-
-        return jdbcOperations.query(sql, params, filmsExtractor);
-    }
-
+      if (deleted == 0) {
+          throw new NotFoundException("Фильм с ID=" + id + " не найден");
+      }
+      log.info("Фильм удалён: {}", id);
+  }
 
     @Override
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
