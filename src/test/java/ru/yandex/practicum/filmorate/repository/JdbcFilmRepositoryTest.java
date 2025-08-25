@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FeedServiceImpl;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -31,7 +32,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         JdbcLikeRepository.class,
         JdbcUserRepository.class,
         JdbcFriendRepository.class,
-        JdbcDirectorRepository.class
+        JdbcDirectorRepository.class,
+        FeedServiceImpl.class,
+        JdbcFeedRepository.class
 })
 @DisplayName("JdbcFilmRepositoryTest")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)

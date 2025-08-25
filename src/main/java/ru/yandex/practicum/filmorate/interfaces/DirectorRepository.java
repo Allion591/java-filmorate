@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.interfaces;
 
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
