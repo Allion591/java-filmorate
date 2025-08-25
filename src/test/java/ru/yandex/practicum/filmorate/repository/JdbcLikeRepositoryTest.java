@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Like;
+import ru.yandex.practicum.filmorate.service.FeedServiceImpl;
 
 import java.util.List;
 
@@ -16,7 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @JdbcTest
-@Import(JdbcLikeRepository.class)
+@Import({JdbcLikeRepository.class, FeedServiceImpl.class,
+        JdbcFeedRepository.class})
 @DisplayName("JdbcLikeRepositoryTest")
 class JdbcLikeRepositoryTest {
 

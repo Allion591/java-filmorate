@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.mapper.ReviewResultSetExtractor;
 import ru.yandex.practicum.filmorate.model.Review;
 
@@ -54,13 +55,8 @@ public class JdbcReviewRepository {
 
     private static final String DELETE_LIKE_DISLIKE = "DELETE FROM review_like where review_id=:review_id and " +
             "user_id=:user_id AND score=:score;";
-    private static final String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, " +
-            "timestamp) VALUES (:userId, 'REVIEW', 'ADD', :reviewId, :timestamp)";
-    private static final String eventSqlForUpdate = "INSERT INTO feed_events (user_id, event_type, operation, " +
-            "entity_id, timestamp) VALUES (:userId, 'REVIEW', 'UPDATE', :reviewId, :timestamp)";
-    private static final String eventSqlForDelete = "INSERT INTO feed_events (user_id, event_type, operation, " +
-            "entity_id, timestamp) VALUES (:userId, 'REVIEW', 'REMOVE', :reviewId, :timestamp)";
 
+    private FeedService feedService;
     private final NamedParameterJdbcOperations jdbc;
     private final ReviewResultSetExtractor reviewResultSetExtractor;
 
@@ -82,12 +78,7 @@ public class JdbcReviewRepository {
         }
         int id = key.intValue();
         review.setReviewId(id);
-        jdbc.update(eventSql, new MapSqlParameterSource()
-                .addValue("userId", review.getUserId())
-                .addValue("reviewId", review.getReviewId())
-                .addValue("timestamp", System.currentTimeMillis()));
-        log.info("Событие добавление отзыва добавлено: review_id={}, user_id={}", review.getReviewId(),
-                review.getUserId());
+        feedService.saveReview(review);
         log.debug("Review saved: {}", review);
         return review;
     }
@@ -107,10 +98,7 @@ public class JdbcReviewRepository {
                 .addValue("review_id", review.getReviewId());
 
         jdbc.update(UPDATE_REVIEW_SQL, params);
-        jdbc.update(eventSqlForUpdate, new MapSqlParameterSource()
-                .addValue("userId", review.getUserId())
-                .addValue("reviewId", review.getReviewId())
-                .addValue("timestamp", System.currentTimeMillis()));
+        feedService.updateReview(review);
         log.debug("Review updated: {}", review);
         return findById(review.getReviewId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -139,14 +127,8 @@ public class JdbcReviewRepository {
         Review review = reviewOpt.get();
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId);
-        Integer deletedCount = jdbc.update(DELETE_REVIEW_BY_ID_SQL, params);
-
-        jdbc.update(eventSqlForDelete, new MapSqlParameterSource()
-                .addValue("userId", review.getUserId())
-                .addValue("reviewId", reviewId)
-                .addValue("timestamp", System.currentTimeMillis()));
-        log.info("Событие удление отзыва добавлено: review_id={}, user_id={}", reviewId, review.getUserId());
-        return deletedCount;
+        feedService.deleteReview(review);
+        return jdbc.update(DELETE_REVIEW_BY_ID_SQL, params);
     }
 
     public void addLike(Integer id, Integer userId) {

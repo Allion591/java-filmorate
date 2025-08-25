@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.NotFriendException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.interfaces.FriendRepository;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JdbcFriendRepository implements FriendRepository {
     private final NamedParameterJdbcOperations jdbcOperations;
+    private final FeedService feedService;
 
     @Override
     public void addFriend(long userId, long friendId) {
@@ -47,13 +49,7 @@ public class JdbcFriendRepository implements FriendRepository {
 
         jdbcOperations.update(sql, params);
 
-        String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
-                "VALUES (:userId, 'FRIEND', 'ADD', :friendId, :timestamp)";
-        jdbcOperations.update(eventSql, new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("friendId", friendId)
-                .addValue("timestamp", System.currentTimeMillis()));
-        log.info("Событие добавление друга добавлено: friend_id={}, user_id={}", friendId, userId);
+        feedService.saveFriend(userId, friendId);
     }
 
     @Override
@@ -73,13 +69,7 @@ public class JdbcFriendRepository implements FriendRepository {
         if (deletedCount == 0) {
             throw new NotFriendException("Пользователи не являются друзьями");
         } else {
-            String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
-                    "VALUES (:userId, 'FRIEND', 'REMOVE', :friendId, :timestamp)";
-            jdbcOperations.update(eventSql, new MapSqlParameterSource()
-                    .addValue("userId", userId)
-                    .addValue("friendId", friendId)
-                    .addValue("timestamp", System.currentTimeMillis()));
-            log.info("Событие удаление добавлено: friend_id={}, user_id={}", friendId, userId);
+           feedService.removerFriend(userId, friendId);
         }
     }
 

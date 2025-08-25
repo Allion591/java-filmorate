@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.response.MessageResponse;
-import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.Collection;
 
@@ -73,6 +73,7 @@ public class UserController {
 
     @GetMapping("/{id}/feed")
     public ResponseEntity<Collection<FeedEvent>> getFeed(@PathVariable long id) {
+        userService.getUserById(id);
         return new ResponseEntity<>(feedService.getFeedEvents(id), HttpStatus.OK);
     }
 }

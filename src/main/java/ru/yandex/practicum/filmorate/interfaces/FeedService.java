@@ -5,9 +5,9 @@ import ru.yandex.practicum.filmorate.model.Review;
 
 import java.util.Collection;
 
-public interface FeedRepository {
+public interface FeedService {
 
-    public Collection<FeedEvent> findFeedEventsByUserId(long userId);
+    public Collection<FeedEvent> getFeedEvents(long userId);
 
     public void saveReview(Review review);
 
