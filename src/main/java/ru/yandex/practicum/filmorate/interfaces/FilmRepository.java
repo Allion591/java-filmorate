@@ -18,4 +18,16 @@ public interface FilmRepository {
     public void deleteById(Long id);
 
     public Collection<Film> findPopularFilms(Long count);
+
+    public Collection<Film> findPopular(Integer count, Integer genreId, Integer year);
+
+    public Collection<Film> findCommonFilms(Long userId, Long friendId);
+
+    public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy);
+
+    public Collection<Film> searchFilmsByTitle(String query);
+
+    public Collection<Film> searchFilmsByDirector(String query);
+
+    public Collection<Film> searchFilmsByTitleAndDirector(String query);
 }

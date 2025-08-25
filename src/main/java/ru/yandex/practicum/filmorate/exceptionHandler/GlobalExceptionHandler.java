@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFoundException(NotFoundException ex) {
         Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("message", ex.getMessage());
+        errorResponse.put("error", ex.getMessage());
         errorResponse.put("status", HttpStatus.NOT_FOUND.name());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }

@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.interfaces.FilmRepository;
 import ru.yandex.practicum.filmorate.interfaces.GenreRepository;
 import ru.yandex.practicum.filmorate.interfaces.LikeRepository;
@@ -48,6 +49,11 @@ public class FilmService {
         return filmRepository.findPopularFilms(count);
     }
 
+    public Collection<Film> getPopular(Integer count, Integer genreId, Integer year) {
+        int c = (count == null || count <= 0) ? 10 : count;
+        return filmRepository.findPopular(c, genreId, year);
+    }
+
     public Film create(Film newFilm) {
         return filmRepository.save(newFilm);
     }
@@ -56,8 +62,11 @@ public class FilmService {
         return filmRepository.update(film);
     }
 
-    public void delete(Film film) {
-        filmRepository.deleteById(film.getId());
+    @Transactional
+    public void delete(Long filmId) {
+        log.info("Удаление фильма с id={}", filmId);
+        filmRepository.deleteById(filmId);
+        log.info("Фильм с id={} удалён из репозитория", filmId);
     }
 
     public Collection<Film> findAll() {
@@ -82,5 +91,26 @@ public class FilmService {
 
     public Collection<Genre> genreGetAll() {
         return genreRepository.findAll();
+    }
+
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        log.info("Запрос общих фильмов пользователей {} и {}", userId, friendId);
+        return filmRepository.findCommonFilms(userId, friendId);
+    }
+
+    public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
+        return filmRepository.getFilmsByDirectorId(directorId, sortBy);
+    }
+
+    public Collection<Film> searchFilmsByTitle(String query) {
+        return filmRepository.searchFilmsByTitle(query);
+    }
+
+    public Collection<Film> searchFilmsByDirector(String query) {
+        return filmRepository.searchFilmsByDirector(query);
+    }
+
+    public Collection<Film> searchFilmsByTitleAndDirector(String query) {
+        return filmRepository.searchFilmsByTitleAndDirector(query);
     }
 }

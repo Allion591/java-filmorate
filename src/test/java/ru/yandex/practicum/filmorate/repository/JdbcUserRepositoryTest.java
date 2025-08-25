@@ -94,9 +94,8 @@ public class JdbcUserRepositoryTest {
     void delete_shouldRemoveUser() {
         User savedUser = userRepository.save(testUser);
 
-        String result = userRepository.delete(savedUser);
+        userRepository.deleteById(savedUser.getId());
 
-        assertThat(result).isEqualTo("Пользователь " + savedUser.getId() + " удалён");
         assertThatThrownBy(() -> userRepository.getUserById(savedUser.getId()))
                 .isInstanceOf(NotFoundException.class);
     }

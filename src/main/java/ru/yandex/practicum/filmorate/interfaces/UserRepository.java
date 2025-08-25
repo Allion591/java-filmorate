@@ -12,7 +12,7 @@ public interface UserRepository {
 
     public User update(User user);
 
-    public String delete(User user);
+    public void deleteById(Long id);
 
     public Collection<User> findAll();
 
