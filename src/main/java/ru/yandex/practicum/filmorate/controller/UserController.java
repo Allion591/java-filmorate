@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.response.MessageResponse;
 import ru.yandex.practicum.filmorate.service.UserService;
-import java.util.Collection;
+ import java.util.Collection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
