@@ -6,7 +6,6 @@ import java.util.Collection;
 
 public interface FilmRepository {
 
-
     public Film update(Film film);
 
     public Collection<Film> findAll();
