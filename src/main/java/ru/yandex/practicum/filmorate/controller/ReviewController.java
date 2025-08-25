@@ -8,7 +8,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
-
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -41,7 +40,8 @@ public class ReviewController {
     @GetMapping()
     public List<Review> getReviewByFilmId(@RequestParam @Positive(message = "FilmId должен быть больше 0")
                                           int filmId,
-                                          @RequestParam(defaultValue = "10") @Positive(message = "Count должен быть больше 0")
+                                          @RequestParam(defaultValue = "10")
+                                          @Positive(message = "Count должен быть больше 0")
                                           int count) {
         return reviewService.getReviewByFilmId(filmId, count);
     }

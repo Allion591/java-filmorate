@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.mapper;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Review;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ public class ReviewResultSetExtractor implements ResultSetExtractor<List<Review>
                 review.setFilmId(rs.getLong("film_id"));
                 review.setUserId(rs.getLong("user_id"));
                 review.setUseful(rs.getInt("useful"));
-                //review.setIsPositive(rs.getObject("useful") != null && rs.getInt("useful") > 0);
                 review.setIsPositive(rs.getBoolean("is_positive"));
                 reviewMap.put(id, review);
             }
