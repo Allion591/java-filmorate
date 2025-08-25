@@ -38,6 +38,7 @@ public class FilmController {
         return ResponseEntity.ok(new MessageResponse("Фильм с id=" + filmId + " удален"));
     }
 
+
     @GetMapping
     public ResponseEntity<Collection<Film>> findAll() {
         return new ResponseEntity<>(filmService.findAll(), HttpStatus.OK);
