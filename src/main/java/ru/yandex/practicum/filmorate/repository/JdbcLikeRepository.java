@@ -37,7 +37,8 @@ public class JdbcLikeRepository implements LikeRepository {
     @Override
     public void addLike(Long filmId, Long userId) {
         String sql = "INSERT INTO likes (film_id, user_id) VALUES (:film_id, :user_id)";
-
+        String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
+                "VALUES (:userId, 'LIKE', 'ADD', :filmId, :timestamp)";
         try {
             jdbcOperations.update(
                     sql,
@@ -46,6 +47,12 @@ public class JdbcLikeRepository implements LikeRepository {
                             .addValue("user_id", userId)
             );
             log.info("Лайк добавлен: film_id={}, user_id={}", filmId, userId);
+            jdbcOperations.update(eventSql, new MapSqlParameterSource()
+                    .addValue("userId", userId)
+                    .addValue("filmId", filmId)
+                    .addValue("timestamp", System.currentTimeMillis()
+                    ));
+            log.info("Событие добаваление лайка добавлено: film_id={}, user_id={}", filmId, userId);
         } catch (DataAccessException e) {
             log.error("Ошибка при добавлении лайка: film_id={}, user_id={}", filmId, userId, e);
             throw new NotFoundException("Пользователь или фильм не найдены") {
@@ -63,6 +70,13 @@ public class JdbcLikeRepository implements LikeRepository {
         if (rowsUpdated == 0) {
             throw new NotFoundException("Пользователь или фильм не найдены");
         }
+        String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
+                "VALUES (:userId, 'LIKE', 'REMOVE', :filmId, :timestamp)";
+        jdbcOperations.update(eventSql, new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("filmId", filmId)
+                .addValue("timestamp", System.currentTimeMillis()));
+        log.info("Событие удаление лайка добавлено: film_id={}, user_id={}", filmId, userId);
     }
 
     @Override
