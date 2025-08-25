@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.interfaces.UserRepository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.JdbcFriendRepository;
@@ -49,8 +50,11 @@ public class UserService {
         return userRepository.update(user);
     }
 
-    public String delete(User user) {
-        return userRepository.delete(user);
+    @Transactional
+    public void delete(Long userId) {
+        log.info("Удаление пользователя с id={}", userId);
+        userRepository.deleteById(userId);
+        log.info("Пользователь с id={} удалён", userId);
     }
 
     public Collection<User> findAll() {

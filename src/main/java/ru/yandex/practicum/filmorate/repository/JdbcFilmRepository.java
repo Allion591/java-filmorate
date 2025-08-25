@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
+
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -264,6 +265,8 @@ public class JdbcFilmRepository implements FilmRepository {
             throw new NotFoundException("Фильм с ID=" + id + " не найден");
         }
     }
+
+
 
     public Collection<Film> findPopularFilms(Long count) {
         log.info("Получаю популярные фильмы: {}", count);

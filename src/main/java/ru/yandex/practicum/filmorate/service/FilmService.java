@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.interfaces.FilmRepository;
 import ru.yandex.practicum.filmorate.interfaces.GenreRepository;
 import ru.yandex.practicum.filmorate.interfaces.LikeRepository;
@@ -56,8 +57,11 @@ public class FilmService {
         return filmRepository.update(film);
     }
 
-    public void delete(Film film) {
-        filmRepository.deleteById(film.getId());
+    @Transactional
+    public void delete(Long filmId) {
+        log.info("Удаление фильма с id={}", filmId);
+        filmRepository.deleteById(filmId);
+        log.info("Фильм с id={} удалён из репозитория", filmId);
     }
 
     public Collection<Film> findAll() {

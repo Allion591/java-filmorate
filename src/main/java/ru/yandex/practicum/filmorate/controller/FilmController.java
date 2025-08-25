@@ -30,10 +30,12 @@ public class FilmController {
         return new ResponseEntity<>(filmService.update(film), HttpStatus.OK);
     }
 
-    @DeleteMapping
-    public ResponseEntity<MessageResponse> delete(Film film) {
-        filmService.delete(film);
-        return ResponseEntity.ok(new MessageResponse("Фильм " + film.getName() + " удален"));
+    @DeleteMapping("/{filmId}")
+    public ResponseEntity<MessageResponse> delete(@PathVariable Long filmId) {
+        log.info("Запрос на удаление фильма с id={}", filmId);
+        filmService.delete(filmId);
+        log.info("Фильм с id={} успешно удалён", filmId);
+        return ResponseEntity.ok(new MessageResponse("Фильм с id=" + filmId + " удален"));
     }
 
     @GetMapping
