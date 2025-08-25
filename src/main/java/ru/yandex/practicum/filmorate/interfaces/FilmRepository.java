@@ -19,6 +19,8 @@ public interface FilmRepository {
 
     public Collection<Film> findPopularFilms(Long count);
 
+    public Collection<Film> findPopular(Integer count, Integer genreId, Integer year);
+
     public Collection<Film> findCommonFilms(Long userId, Long friendId);
 
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy);
