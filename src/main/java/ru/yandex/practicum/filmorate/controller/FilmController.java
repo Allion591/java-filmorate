@@ -66,7 +66,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public ResponseEntity<Collection<Film>> getPopular(@RequestParam(required = false) Long count,
+    public ResponseEntity<Collection<Film>> getPopular(@RequestParam(defaultValue = "10") Long count,
                                                        @RequestParam(required = false) Integer genreId,
                                                        @RequestParam(required = false) Integer year) {
         if (count != null && count < 0) {
