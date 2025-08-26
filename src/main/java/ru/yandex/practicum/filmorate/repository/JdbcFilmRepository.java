@@ -245,48 +245,73 @@ public class JdbcFilmRepository implements FilmRepository {
     @Override
     public Collection<Film> findPopular(Integer count, Integer genreId, Integer year) {
         log.info("Получаю популярные фильмы c фильтрами: count={}, genreId={}, year={}", count, genreId, year);
-        String sql = """
-                WITH filtered AS (
-                    SELECT f.film_id, COUNT(l.user_id) AS likes_count
-                    FROM films f
-                    LEFT JOIN likes l ON l.film_id = f.film_id
-                    LEFT JOIN film_genre fg ON fg.film_id = f.film_id
-                    WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
-                      AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
-                    GROUP BY f.film_id
-                    ORDER BY likes_count DESC, f.film_id
-                    LIMIT :count
-                )
-                SELECT
-                    f.film_id,
-                    f.films_name,
-                    f.description,
-                    f.release_date,
-                    f.duration,
-                    f.mpa_id,
-                    m.mpa_name,
-                    g.genre_id,
-                    g.genre_name,
-                    d.director_id,
-                    d.director_name,
-                    l.user_id
-                FROM filtered t
-                JOIN films f ON f.film_id = t.film_id
-                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
-                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
-                LEFT JOIN genre g ON fg.genre_id = g.genre_id
-                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
-                LEFT JOIN directors d ON fd.director_id = d.director_id
-                LEFT JOIN likes l ON f.film_id = l.film_id
-                ORDER BY t.likes_count DESC, f.film_id
-                """;
+
+        String popularIdsSql = """
+        SELECT f.film_id, COUNT(DISTINCT l.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN likes l ON l.film_id = f.film_id
+        WHERE (:genreId IS NULL OR EXISTS (
+            SELECT 1 FROM film_genre fg WHERE fg.film_id = f.film_id AND fg.genre_id = :genreId
+        ))
+        AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
+        GROUP BY f.film_id
+        ORDER BY likes_count DESC, f.film_id
+        LIMIT :count
+    """;
 
         int limit = (count == null || count <= 0) ? 10 : count;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("count", limit)
                 .addValue("genreId", genreId)
                 .addValue("year", year);
-        return jdbcOperations.query(sql, params, filmsExtractor);
+
+        List<Long> popularFilmIds = jdbcOperations.query(
+                popularIdsSql,
+                params,
+                (rs, rowNum) -> rs.getLong("film_id")
+        );
+
+        if (popularFilmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String filmsSql = """
+        SELECT
+            f.film_id,
+            f.films_name,
+            f.description,
+            f.release_date,
+            f.duration,
+            f.mpa_id,
+            m.mpa_name,
+            g.genre_id,
+            g.genre_name,
+            d.director_id,
+            d.director_name,
+            l.user_id
+        FROM films f
+        LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
+        LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+        LEFT JOIN genre g ON fg.genre_id = g.genre_id
+        LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+        LEFT JOIN directors d ON fd.director_id = d.director_id
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE f.film_id IN (:filmIds)
+        ORDER BY f.film_id
+    """;
+
+        MapSqlParameterSource filmsParams = new MapSqlParameterSource()
+                .addValue("filmIds", popularFilmIds);
+
+        Collection<Film> films = jdbcOperations.query(filmsSql, filmsParams, filmsExtractor);
+
+        Map<Long, Film> filmMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, Function.identity()));
+
+        return popularFilmIds.stream()
+                .map(filmMap::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
