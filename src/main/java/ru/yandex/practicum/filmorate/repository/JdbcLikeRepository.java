@@ -36,7 +36,19 @@ public class JdbcLikeRepository implements LikeRepository {
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        String sql = "INSERT INTO likes (film_id, user_id) VALUES (:film_id, :user_id)";
+        String checkLikeSql = "SELECT COUNT(*) FROM likes WHERE film_id = :film_id AND user_id = :user_id";
+        Integer likeCount = jdbcOperations.queryForObject(
+                checkLikeSql,
+                new MapSqlParameterSource()
+                        .addValue("film_id", filmId)
+                        .addValue("user_id", userId),
+                Integer.class
+        );
+
+        if (likeCount > 0) {
+            return;
+        } else {
+            String sql = "INSERT INTO likes (film_id, user_id) VALUES (:film_id, :user_id)";
             jdbcOperations.update(
                     sql,
                     new MapSqlParameterSource()
@@ -45,6 +57,7 @@ public class JdbcLikeRepository implements LikeRepository {
             );
             log.info("Лайк добавлен: film_id={}, user_id={}", filmId, userId);
             feedService.saveLike(filmId, userId);
+        }
     }
 
     @Override
