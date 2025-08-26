@@ -440,6 +440,7 @@ public class JdbcFilmRepository implements FilmRepository {
 
     @Override
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
+        directorRepository.findById((long) directorId);
         log.info("Получаю фильмы по id режиссера : {}", directorId);
         log.info("Сортирую по : {}", sortBy);
         String sql;
