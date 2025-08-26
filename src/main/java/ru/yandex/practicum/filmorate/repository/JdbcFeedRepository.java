@@ -28,7 +28,6 @@ public class JdbcFeedRepository implements FeedRepository {
     public Collection<FeedEvent> findFeedEventsByUserId(long userId) {
         String sql = "SELECT * FROM feed_events " +
                 "WHERE user_id = :userId " +
-                "OR (event_type = 'FRIEND' AND entity_id = :userId) " +
                 "OR (event_type IN ('LIKE', 'REVIEW') AND user_id IN (" +
                 "    SELECT friend_id FROM friendship WHERE user_id = :userId" +
                 "    UNION " +
