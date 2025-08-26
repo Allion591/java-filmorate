@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.repository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Repository;
@@ -11,7 +10,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.interfaces.LikeRepository;
 import ru.yandex.practicum.filmorate.model.Like;
-
 import java.util.List;
 
 @Slf4j
@@ -39,7 +37,6 @@ public class JdbcLikeRepository implements LikeRepository {
     @Override
     public void addLike(Long filmId, Long userId) {
         String sql = "INSERT INTO likes (film_id, user_id) VALUES (:film_id, :user_id)";
-        try {
             jdbcOperations.update(
                     sql,
                     new MapSqlParameterSource()
@@ -48,11 +45,6 @@ public class JdbcLikeRepository implements LikeRepository {
             );
             log.info("Лайк добавлен: film_id={}, user_id={}", filmId, userId);
             feedService.saveLike(filmId, userId);
-        } catch (DataAccessException e) {
-            log.error("Ошибка при добавлении лайка: film_id={}, user_id={}", filmId, userId, e);
-            throw new NotFoundException("Пользователь или фильм не найдены") {
-            };
-        }
     }
 
     @Override

@@ -62,22 +62,6 @@ class JdbcLikeRepositoryTest {
     }
 
     @Test
-    @DisplayName("Должен выбрасывать исключение при добавлении лайка несуществующему фильму")
-    void shouldThrowWhenAddingLikeToNonExistingFilm() {
-        assertThatThrownBy(() -> likeRepository.addLike(999L, userId1))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Пользователь или фильм не найдены");
-    }
-
-    @Test
-    @DisplayName("Должен выбрасывать исключение при добавлении лайка несуществующим пользователем")
-    void shouldThrowWhenAddingLikeWithNonExistingUser() {
-        assertThatThrownBy(() -> likeRepository.addLike(filmId1, 999L))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Пользователь или фильм не найдены");
-    }
-
-    @Test
     @DisplayName("Должен удалять лайк")
     void shouldRemoveLike() {
         likeRepository.addLike(filmId1, userId1);

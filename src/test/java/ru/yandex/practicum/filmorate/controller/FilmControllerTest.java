@@ -279,7 +279,7 @@ public class FilmControllerTest {
         mockMvc.perform(put("/films/999/like/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error")
-                        .value("Пользователь или фильм не найдены"));
+                        .value("Пользователь с ID 999 не найден"));
     }
 
     @Test

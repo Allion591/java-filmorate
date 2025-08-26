@@ -37,6 +37,8 @@ public class FilmService {
 
     public void addLike(Long filmId, Long userId) {
         log.info("Добавление лайка");
+        userService.getUserById(userId);
+        filmRepository.getFilmById(filmId);
         likeRepository.addLike(filmId, userId);
     }
 
