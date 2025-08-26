@@ -335,7 +335,7 @@ public class FilmControllerTest {
 
         mockMvc.perform(get("/films/popular?count=1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name").value("Valid Film"));
     }
 

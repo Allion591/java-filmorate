@@ -19,6 +19,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Qualifier("jdbcFilmRepository")
@@ -183,7 +185,29 @@ public class JdbcFilmRepository implements FilmRepository {
     @Override
     public Collection<Film> findPopularFilms(Long count) {
         log.info("Получаю популярные фильмы: {}", count);
-        String sql = "SELECT " +
+
+        // Сначала получаем ID фильмов с количеством лайков, отсортированные по популярности
+        String popularIdsSql = "SELECT f.film_id, COUNT(l.user_id) as likes_count " +
+                "FROM films f " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "GROUP BY f.film_id " +
+                "ORDER BY likes_count DESC " +
+                "LIMIT :count";
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("count", count);
+
+        List<Long> popularFilmIds = jdbcOperations.query(
+                popularIdsSql,
+                params,
+                (rs, rowNum) -> rs.getLong("film_id")
+        );
+
+        if (popularFilmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String filmsSql = "SELECT " +
                 "f.film_id, " +
                 "f.films_name, " +
                 "f.description, " +
@@ -195,8 +219,7 @@ public class JdbcFilmRepository implements FilmRepository {
                 "g.genre_name, " +
                 "d.director_id, " +
                 "d.director_name, " +
-                "l.user_id, " +
-                "COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
+                "l.user_id " +
                 "FROM films f " +
                 "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
                 "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
@@ -204,9 +227,19 @@ public class JdbcFilmRepository implements FilmRepository {
                 "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
                 "LEFT JOIN directors d ON fd.director_id = d.director_id " +
                 "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "ORDER BY likes_count DESC, f.film_id";
+                "WHERE f.film_id IN (:filmIds)";
 
-        return jdbcOperations.query(sql, filmsExtractor);
+        MapSqlParameterSource filmsParams = new MapSqlParameterSource();
+        filmsParams.addValue("filmIds", popularFilmIds);
+
+        Collection<Film> films = jdbcOperations.query(filmsSql, filmsParams, filmsExtractor);
+        Map<Long, Film> filmMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, Function.identity()));
+
+        return popularFilmIds.stream()
+                .map(filmMap::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
