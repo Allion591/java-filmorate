@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
-
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -16,7 +15,6 @@ import ru.yandex.practicum.filmorate.interfaces.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Like;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -120,7 +118,6 @@ public class JdbcFilmRepository implements FilmRepository {
         Set<Director> directors = directorRepository.loadDirectors(film.getId().intValue());
         film.setDirectors(directors);
     }
-
 
     @Override
     public Film getFilmById(Long id) {
@@ -364,24 +361,24 @@ public class JdbcFilmRepository implements FilmRepository {
 
     @Override
     public void deleteById(Long id) {
-      log.info("Удаляю фильм : {}", id);
-      String deleteGenresSql = "DELETE FROM film_genre WHERE film_id = :film_id";
-      jdbcOperations.update(deleteGenresSql, new MapSqlParameterSource("film_id", id));
+        log.info("Удаляю фильм : {}", id);
+        String deleteGenresSql = "DELETE FROM film_genre WHERE film_id = :film_id";
+        jdbcOperations.update(deleteGenresSql, new MapSqlParameterSource("film_id", id));
 
-      String deleteLikesSql = "DELETE FROM likes WHERE film_id = :id";
-      jdbcOperations.update(deleteLikesSql, new MapSqlParameterSource("id", id));
+        String deleteLikesSql = "DELETE FROM likes WHERE film_id = :id";
+        jdbcOperations.update(deleteLikesSql, new MapSqlParameterSource("id", id));
 
-      String deleteDirectorsSql = "DELETE FROM film_directors WHERE film_id = :film_id";
-      jdbcOperations.update(deleteDirectorsSql, new MapSqlParameterSource("film_id", id));
+        String deleteDirectorsSql = "DELETE FROM film_directors WHERE film_id = :film_id";
+        jdbcOperations.update(deleteDirectorsSql, new MapSqlParameterSource("film_id", id));
 
-      String deleteFilmSql = "DELETE FROM films WHERE film_id = :id";
-      int deleted = jdbcOperations.update(deleteFilmSql, new MapSqlParameterSource("id", id));
+        String deleteFilmSql = "DELETE FROM films WHERE film_id = :id";
+        int deleted = jdbcOperations.update(deleteFilmSql, new MapSqlParameterSource("id", id));
 
-      if (deleted == 0) {
-          throw new NotFoundException("Фильм с ID=" + id + " не найден");
-      }
-      log.info("Фильм удалён: {}", id);
-  }
+        if (deleted == 0) {
+            throw new NotFoundException("Фильм с ID=" + id + " не найден");
+        }
+        log.info("Фильм удалён: {}", id);
+    }
 
     @Override
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
@@ -493,7 +490,8 @@ public class JdbcFilmRepository implements FilmRepository {
                 "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
                 "LEFT JOIN directors d ON fd.director_id = d.director_id " +
                 "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "WHERE (:query = '' OR (LOWER(f.films_name) LIKE LOWER('%' || :query || '%') OR LOWER(d.director_name) LIKE LOWER('%' || :query || '%'))) " +
+                "WHERE (:query = '' OR (LOWER(f.films_name) LIKE LOWER('%' || :query || '%') " +
+                "OR LOWER(d.director_name) LIKE LOWER('%' || :query || '%'))) " +
                 "ORDER BY likes_count DESC, f.film_id";
 
         MapSqlParameterSource params = new MapSqlParameterSource("query", query);

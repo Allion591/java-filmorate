@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.mapper.ReviewResultSetExtractor;
 import ru.yandex.practicum.filmorate.model.Review;
 
@@ -52,9 +53,10 @@ public class JdbcReviewRepository {
     private static final String ADD_LIKE_DISLIKE = "MERGE INTO review_like (review_id, user_id, score) " +
             "key(review_id, user_id) VALUES (:review_id, :user_id, :score)";
 
-    private static final String DELETE_LIKE_DISLIKE = "DELETE FROM review_like where review_id=:review_id and user_id=:user_id" +
-            " AND score=:score;";
+    private static final String DELETE_LIKE_DISLIKE = "DELETE FROM review_like where review_id=:review_id and " +
+            "user_id=:user_id AND score=:score;";
 
+    private FeedService feedService;
     private final NamedParameterJdbcOperations jdbc;
     private final ReviewResultSetExtractor reviewResultSetExtractor;
 
@@ -67,7 +69,6 @@ public class JdbcReviewRepository {
                 .addValue("user_id", review.getUserId())
                 .addValue("is_positive", review.getIsPositive());
 
-
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(INSERT_REVIEW_SQL, params, keyHolder, new String[]{"review_id"});
 
@@ -77,7 +78,7 @@ public class JdbcReviewRepository {
         }
         int id = key.intValue();
         review.setReviewId(id);
-
+        feedService.saveReview(review);
         log.debug("Review saved: {}", review);
         return review;
     }
@@ -97,6 +98,7 @@ public class JdbcReviewRepository {
                 .addValue("review_id", review.getReviewId());
 
         jdbc.update(UPDATE_REVIEW_SQL, params);
+        feedService.updateReview(review);
         log.debug("Review updated: {}", review);
         return findById(review.getReviewId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -118,8 +120,14 @@ public class JdbcReviewRepository {
     }
 
     public Integer deleteReviewById(Integer reviewId) {
+        Optional<Review> reviewOpt = findById(reviewId);
+        if (reviewOpt.isEmpty()) {
+            return 0;
+        }
+        Review review = reviewOpt.get();
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId);
+        feedService.deleteReview(review);
         return jdbc.update(DELETE_REVIEW_BY_ID_SQL, params);
     }
 
@@ -154,5 +162,4 @@ public class JdbcReviewRepository {
                 .addValue("score", -1);
         jdbc.update(DELETE_LIKE_DISLIKE, params);
     }
-
 }
