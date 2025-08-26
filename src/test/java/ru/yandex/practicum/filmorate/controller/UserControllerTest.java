@@ -86,7 +86,7 @@ class UserControllerTest {
                         .content(userJson))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value(""));
+                .andExpect(jsonPath("$.name").value("emptyName"));
     }
 
     @Test

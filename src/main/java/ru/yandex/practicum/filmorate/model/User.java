@@ -38,4 +38,12 @@ public class User {
         this.login = login;
         this.birthday = birthday;
     }
+
+    public void setName(String name) {
+        this.name = (name == null || name.isBlank()) ? null : name;
+    }
+
+    public String getName() {
+        return (name == null || name.isBlank()) ? login : name;
+    }
 }
