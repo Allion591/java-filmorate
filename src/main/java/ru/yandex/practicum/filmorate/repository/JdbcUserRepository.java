@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.interfaces.FriendRepository;
 import ru.yandex.practicum.filmorate.interfaces.UserRepository;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;

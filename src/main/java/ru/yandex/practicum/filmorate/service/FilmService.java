@@ -49,6 +49,11 @@ public class FilmService {
         return filmRepository.findPopularFilms(count);
     }
 
+    public Collection<Film> getPopular(Integer count, Integer genreId, Integer year) {
+        int c = (count == null || count <= 0) ? 10 : count;
+        return filmRepository.findPopular(c, genreId, year);
+    }
+
     public Film create(Film newFilm) {
         return filmRepository.save(newFilm);
     }

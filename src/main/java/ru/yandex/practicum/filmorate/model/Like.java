@@ -6,7 +6,7 @@ import lombok.*;
 @Setter
 @RequiredArgsConstructor
 @ToString
-@EqualsAndHashCode(of = {"idFilm, idUser"})
+@EqualsAndHashCode
 public class Like {
     private final long idFilm;
     private final long idUser;
