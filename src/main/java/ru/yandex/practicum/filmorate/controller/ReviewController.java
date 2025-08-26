@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -39,9 +40,10 @@ public class ReviewController {
     }
 
     @GetMapping()
-    public List<Review> getReviewByFilmId(@RequestParam @Positive(message = "FilmId должен быть больше 0")
-                                          int filmId,
-                                          @RequestParam(defaultValue = "10") @Positive(message = "Count должен быть больше 0")
+    public List<Review> getReviewByFilmId(@RequestParam(required = false)
+                                          Optional<Integer> filmId,
+                                          @RequestParam(defaultValue = "10")
+                                          @Positive(message = "Count должен быть больше 0")
                                           int count) {
         return reviewService.getReviewByFilmId(filmId, count);
     }

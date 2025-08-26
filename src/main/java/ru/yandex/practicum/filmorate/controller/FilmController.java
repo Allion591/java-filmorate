@@ -27,6 +27,7 @@ public class FilmController {
 
     @PutMapping
     public ResponseEntity<Film> update(@Valid @RequestBody Film film) {
+        log.info("Обновляю фильм: {}", film);
         return new ResponseEntity<>(filmService.update(film), HttpStatus.OK);
     }
 
@@ -38,93 +39,101 @@ public class FilmController {
         return ResponseEntity.ok(new MessageResponse("Фильм с id=" + filmId + " удален"));
     }
 
-
     @GetMapping
     public ResponseEntity<Collection<Film>> findAll() {
+        log.info("Запрос списка всех фильмов");
         return new ResponseEntity<>(filmService.findAll(), HttpStatus.OK);
     }
 
-    @GetMapping(value = {"/{id}"})
+    @GetMapping("/{id}")
     public ResponseEntity<Film> getFilmById(@PathVariable Long id) {
+        log.info("Запрос фильма по id={}", id);
         return new ResponseEntity<>(filmService.getFilmById(id), HttpStatus.OK);
     }
 
-    @PutMapping("{id}/like/{userId}")
+    @PutMapping("/{id}/like/{userId}")
     public ResponseEntity<MessageResponse> addLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Добавление лайка: filmId={}, userId={}", id, userId);
         filmService.addLike(id, userId);
         return ResponseEntity.ok(new MessageResponse("Спасибо за оценку."));
     }
 
-    @DeleteMapping("{id}/like/{userId}")
+    @DeleteMapping("/{id}/like/{userId}")
     public ResponseEntity<MessageResponse> removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Удаление лайка: filmId={}, userId={}", id, userId);
         filmService.removeLike(id, userId);
         return ResponseEntity.ok(new MessageResponse("Лайк удален"));
     }
 
     @GetMapping("/popular")
-    public ResponseEntity<Collection<Film>> getPopular(@RequestParam(required = false) Long count) {
+    public ResponseEntity<Collection<Film>> getPopular(@RequestParam(required = false) Long count,
+                                                       @RequestParam(required = false) Integer genreId,
+                                                       @RequestParam(required = false) Integer year) {
         if (count != null && count < 0) {
             throw new ValidationException("Количество лайков не может быть отрицательным");
-        } else {
-            return new ResponseEntity<>(filmService.getPopularFilm(count), HttpStatus.OK);
         }
+        Collection<Film> result;
+        if (genreId != null || year != null) {
+            Integer c = (count == null) ? null : count.intValue();
+            result = filmService.getPopular(c, genreId, year);
+        } else {
+            result = filmService.getPopularFilm(count);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/common")
     public ResponseEntity<Collection<Film>> getCommonFilms(@RequestParam Long userId,
                                                            @RequestParam Long friendId) {
+        log.info("Запрос общих фильмов: userId={}, friendId={}", userId, friendId);
         Collection<Film> films = filmService.getCommonFilms(userId, friendId);
         return new ResponseEntity<>(films, HttpStatus.OK);
     }
 
 
     @GetMapping("/director/{directorId}")
-    public Collection<Film> getFilmsByDirectorIdSortedByLikesOrYear(
+    public ResponseEntity<Collection<Film>> getFilmsByDirectorIdSortedByLikesOrYear(
             @PathVariable int directorId,
             @RequestParam(required = false, defaultValue = "likes") String sortBy) {
 
         log.info("Запрос списка фильмов режиссера с сортировкой: directorId={}, sortBy={}", directorId, sortBy);
 
-        if (!"likes".equalsIgnoreCase(sortBy) && !"year".equalsIgnoreCase(sortBy)) {
+        String sort = sortBy == null ? "likes" : sortBy.toLowerCase();
+        if (!java.util.Set.of("likes", "year").contains(sort)) {
             log.warn("Недопустимое значение параметра sortBy: {}", sortBy);
-            throw new IllegalArgumentException("Параметр sortBy может принимать значения 'likes' или 'year'");
+            throw new ValidationException("Параметр sortBy может принимать значения 'likes' или 'year'");
         }
 
-        return filmService.getFilmsByDirectorId(directorId, sortBy.toLowerCase());
+        Collection<Film> films = filmService.getFilmsByDirectorId(directorId, sort);
+        return ResponseEntity.ok(films);
     }
 
     @GetMapping("/search")
-    public Collection<Film> searchFilms(@RequestParam String query,
-                                        @RequestParam(required = false) String by) {
-        log.info("Поиск фильмов по запросу: '{}', критерии: {}", query, by);
+    public ResponseEntity<Collection<Film>> searchFilms(@RequestParam String query,
+                                        @RequestParam(required = false, defaultValue = "title,director") String by) {
+        log.info("Поиск фильмов по запросу: '{}' , критерии: {}", query, by);
 
-        if (by == null) {
-            by = "title,director";
-        }
-
-        String[] criteria = by.split(",");
-        boolean searchTitle = false;
-        boolean searchDirector = false;
-
-        for (String criterion : criteria) {
-            if ("title".equalsIgnoreCase(criterion.trim())) {
-                searchTitle = true;
-            } else if ("director".equalsIgnoreCase(criterion.trim())) {
-                searchDirector = true;
-            }
-        }
+        java.util.Set<String> fields = java.util.Arrays.stream(by.split(","))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toSet());
+        boolean searchTitle = fields.contains("title");
+        boolean searchDirector = fields.contains("director");
 
         if (!searchTitle && !searchDirector) {
             searchTitle = true;
             searchDirector = true;
         }
 
+        Collection<Film> result;
         if (searchTitle && searchDirector) {
-            return filmService.searchFilmsByTitleAndDirector(query);
+            result = filmService.searchFilmsByTitleAndDirector(query);
         } else if (searchTitle) {
-            return filmService.searchFilmsByTitle(query);
+            result = filmService.searchFilmsByTitle(query);
         } else {
-            return filmService.searchFilmsByDirector(query);
+            result = filmService.searchFilmsByDirector(query);
         }
+        return ResponseEntity.ok(result);
     }
 }

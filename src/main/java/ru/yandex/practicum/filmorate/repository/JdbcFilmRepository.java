@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
-
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -16,7 +15,6 @@ import ru.yandex.practicum.filmorate.interfaces.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Like;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -121,7 +119,6 @@ public class JdbcFilmRepository implements FilmRepository {
         film.setDirectors(directors);
     }
 
-
     @Override
     public Film getFilmById(Long id) {
         log.info("Ищем фильм по id: {}", id);
@@ -181,6 +178,122 @@ public class JdbcFilmRepository implements FilmRepository {
                 "LEFT JOIN directors d ON fd.director_id = d.director_id " +
                 "ORDER BY f.film_id";
         return jdbcOperations.query(sql, filmsExtractor);
+    }
+
+    @Override
+    public Collection<Film> findPopularFilms(Long count) {
+        log.info("Получаю популярные фильмы: {}", count);
+        String sql = "SELECT " +
+                "f.film_id, " +
+                "f.films_name, " +
+                "f.description, " +
+                "f.release_date, " +
+                "f.duration, " +
+                "f.mpa_id, " +
+                "m.mpa_name, " +
+                "g.genre_id, " +
+                "g.genre_name, " +
+                "d.director_id, " +
+                "d.director_name, " +
+                "l.user_id, " +
+                "COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
+                "FROM films f " +
+                "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
+                "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "ORDER BY likes_count DESC, f.film_id";
+
+        return jdbcOperations.query(sql, filmsExtractor);
+    }
+
+    @Override
+    public Collection<Film> findPopular(Integer count, Integer genreId, Integer year) {
+        log.info("Получаю популярные фильмы c фильтрами: count={}, genreId={}, year={}", count, genreId, year);
+        String sql = """
+                WITH filtered AS (
+                    SELECT f.film_id, COUNT(l.user_id) AS likes_count
+                    FROM films f
+                    LEFT JOIN likes l ON l.film_id = f.film_id
+                    LEFT JOIN film_genre fg ON fg.film_id = f.film_id
+                    WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
+                      AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
+                    GROUP BY f.film_id
+                    ORDER BY likes_count DESC, f.film_id
+                    LIMIT :count
+                )
+                SELECT
+                    f.film_id,
+                    f.films_name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.mpa_id,
+                    m.mpa_name,
+                    g.genre_id,
+                    g.genre_name,
+                    d.director_id,
+                    d.director_name,
+                    l.user_id
+                FROM filtered t
+                JOIN films f ON f.film_id = t.film_id
+                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
+                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+                LEFT JOIN genre g ON fg.genre_id = g.genre_id
+                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                ORDER BY t.likes_count DESC, f.film_id
+                """;
+
+        int limit = (count == null || count <= 0) ? 10 : count;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("count", limit)
+                .addValue("genreId", genreId)
+                .addValue("year", year);
+        return jdbcOperations.query(sql, params, filmsExtractor);
+    }
+
+    @Override
+    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
+        log.info("Получаю общие фильмы для пользователей userId={}, friendId={}", userId, friendId);
+        String sql = """
+                SELECT
+                  f.film_id,
+                  f.films_name,
+                  f.description,
+                  f.release_date,
+                  f.duration,
+                  f.mpa_id,
+                  m.mpa_name,
+                  g.genre_id,
+                  g.genre_name,
+                  d.director_id,
+                  d.director_name,
+                  l.user_id
+                FROM films f
+                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
+                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+                LEFT JOIN genre g ON fg.genre_id = g.genre_id
+                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE EXISTS (
+                    SELECT 1 FROM likes l1 WHERE l1.film_id = f.film_id AND l1.user_id = :userId
+                )
+                AND EXISTS (
+                    SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = :friendId
+                )
+                ORDER BY f.film_id
+                """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("friendId", friendId);
+
+        return jdbcOperations.query(sql, params, filmsExtractor);
     }
 
     @Override
@@ -264,78 +377,8 @@ public class JdbcFilmRepository implements FilmRepository {
         if (deleted == 0) {
             throw new NotFoundException("Фильм с ID=" + id + " не найден");
         }
+        log.info("Фильм удалён: {}", id);
     }
-
-
-
-    public Collection<Film> findPopularFilms(Long count) {
-        log.info("Получаю популярные фильмы: {}", count);
-        String sql = "SELECT " +
-                "   f.film_id, " +
-                "   f.films_name, " +
-                "   f.description, " +
-                "   f.release_date, " +
-                "   f.duration, " +
-                "   f.mpa_id, " +
-                "   g.genre_id, " +
-                "   g.genre_name, " +
-                "   m.mpa_name, " +
-                "   l.user_id, " +
-                "   d.director_id, " +
-                "   d.director_name, " +
-                "   COUNT(l.user_id) OVER (PARTITION BY f.film_id) AS likes_count " +
-                "FROM films f " +
-                "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
-                "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
-                "LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
-                "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
-                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
-                "ORDER BY likes_count DESC, f.film_id ";
-
-        MapSqlParameterSource params = new MapSqlParameterSource("count", count);
-        return jdbcOperations.query(sql, params, filmsExtractor);
-    }
-
-    @Override
-    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
-        String sql = """
-                  SELECT
-                    f.film_id,
-                    f.films_name,
-                    f.description,
-                    f.release_date,
-                    f.duration,
-                    f.mpa_id,
-                    m.mpa_name,
-                    g.genre_id,
-                    g.genre_name,
-                    d.director_id,
-                    d.director_name,
-                    l.user_id AS liked_user_id
-                FROM films f
-                LEFT JOIN mpa m ON f.mpa_id = m.mpa_id
-                LEFT JOIN film_genre fg ON f.film_id = fg.film_id
-                LEFT JOIN genre g ON fg.genre_id = g.genre_id
-                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
-                LEFT JOIN directors d ON fd.director_id = d.director_id
-                LEFT JOIN likes l ON f.film_id = l.film_id
-                WHERE EXISTS (
-                    SELECT 1 FROM likes l1 WHERE l1.film_id = f.film_id AND l1.user_id = :userId
-                )
-                AND EXISTS (
-                    SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = :friendId
-                )
-                ORDER BY f.film_id;
-               """;
-
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("friendId", friendId);
-
-        return jdbcOperations.query(sql, params, filmsExtractor);
-    }
-
 
     @Override
     public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
@@ -447,7 +490,8 @@ public class JdbcFilmRepository implements FilmRepository {
                 "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
                 "LEFT JOIN directors d ON fd.director_id = d.director_id " +
                 "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "WHERE (:query = '' OR (LOWER(f.films_name) LIKE LOWER('%' || :query || '%') OR LOWER(d.director_name) LIKE LOWER('%' || :query || '%'))) " +
+                "WHERE (:query = '' OR (LOWER(f.films_name) LIKE LOWER('%' || :query || '%') " +
+                "OR LOWER(d.director_name) LIKE LOWER('%' || :query || '%'))) " +
                 "ORDER BY likes_count DESC, f.film_id";
 
         MapSqlParameterSource params = new MapSqlParameterSource("query", query);

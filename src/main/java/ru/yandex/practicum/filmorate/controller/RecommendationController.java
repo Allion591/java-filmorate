@@ -15,7 +15,6 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/users")
 public class RecommendationController {
-
     private final RecommendationService recommendationService;
 
     @GetMapping("/{id}/recommendations")

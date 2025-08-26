@@ -9,7 +9,6 @@ import jakarta.validation.ConstraintViolationException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.NotFriendException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-
 import java.util.HashMap;
 import java.util.Map;
 

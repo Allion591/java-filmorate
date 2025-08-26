@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.NotFriendException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.interfaces.FriendRepository;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JdbcFriendRepository implements FriendRepository {
     private final NamedParameterJdbcOperations jdbcOperations;
+    private final FeedService feedService;
 
     @Override
     public void addFriend(long userId, long friendId) {
@@ -46,6 +48,8 @@ public class JdbcFriendRepository implements FriendRepository {
                 .addValue("friendId", friendId);
 
         jdbcOperations.update(sql, params);
+
+        feedService.saveFriend(userId, friendId);
     }
 
     @Override
@@ -64,6 +68,8 @@ public class JdbcFriendRepository implements FriendRepository {
 
         if (deletedCount == 0) {
             throw new NotFriendException("Пользователи не являются друзьями");
+        } else {
+           feedService.removerFriend(userId, friendId);
         }
     }
 

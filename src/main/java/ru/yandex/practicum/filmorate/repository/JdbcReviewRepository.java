@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.mapper.ReviewResultSetExtractor;
 import ru.yandex.practicum.filmorate.model.Review;
 
@@ -32,12 +33,20 @@ public class JdbcReviewRepository {
             "SELECT COUNT(*) AS ROW_COUNT FROM review WHERE film_id = :film_id AND user_id = :user_id";
 
     private static final String SELECT_REVIEW_BY_FILM_ID =
-            "SELECT rs.REVIEW_ID, rs.CONTENT,rs.FILM_ID, rs.USER_ID,rs.IS_POSITIVE, SUM(rl.SCORE) AS USEFUL " +
+            "SELECT rs.REVIEW_ID, rs.CONTENT,rs.FILM_ID, rs.USER_ID,rs.IS_POSITIVE, COALESCE(SUM(rl.SCORE), 0) AS USEFUL " +
                     "FROM (SELECT * FROM REVIEW WHERE film_id=:film_id " +
-                    "ORDER BY review_id LIMIT :count) AS rs " +
+                    "LIMIT :count) AS rs " +
                     "LEFT JOIN REVIEW_LIKE rl " +
                     "ON rs.REVIEW_ID = rl.REVIEW_ID " +
-                    "GROUP BY rs.REVIEW_ID;";
+                    "GROUP BY rs.REVIEW_ID ORDER BY USEFUL DESC;";
+
+    private static final String SELECT_ALL_REVIEW =
+            "SELECT rs.REVIEW_ID, rs.CONTENT,rs.FILM_ID, rs.USER_ID,rs.IS_POSITIVE, COALESCE(SUM(rl.SCORE), 0) AS USEFUL " +
+                    "FROM (SELECT * FROM REVIEW " +
+                    "LIMIT :count) AS rs " +
+                    "LEFT JOIN REVIEW_LIKE rl " +
+                    "ON rs.REVIEW_ID = rl.REVIEW_ID " +
+                    "GROUP BY rs.REVIEW_ID ORDER BY USEFUL DESC;";
 
     private static final String SELECT_REVIEW_BY_ID_SQL =
             "SELECT rs.REVIEW_ID, rs.CONTENT,rs.FILM_ID, rs.USER_ID, rs.IS_POSITIVE, SUM(rl.SCORE) AS USEFUL " +
@@ -52,21 +61,20 @@ public class JdbcReviewRepository {
     private static final String ADD_LIKE_DISLIKE = "MERGE INTO review_like (review_id, user_id, score) " +
             "key(review_id, user_id) VALUES (:review_id, :user_id, :score)";
 
-    private static final String DELETE_LIKE_DISLIKE = "DELETE FROM review_like where review_id=:review_id and user_id=:user_id" +
-            " AND score=:score;";
+    private static final String DELETE_LIKE_DISLIKE = "DELETE FROM review_like where review_id=:review_id and " +
+            "user_id=:user_id AND score=:score;";
 
+    private FeedService feedService;
     private final NamedParameterJdbcOperations jdbc;
     private final ReviewResultSetExtractor reviewResultSetExtractor;
 
     public Review save(Review review) {
         log.debug("Saving review: {}", review);
-        System.out.println(review.getIsPositive().toString());
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("content", review.getContent())
                 .addValue("film_id", review.getFilmId())
                 .addValue("user_id", review.getUserId())
                 .addValue("is_positive", review.getIsPositive());
-
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(INSERT_REVIEW_SQL, params, keyHolder, new String[]{"review_id"});
@@ -77,7 +85,7 @@ public class JdbcReviewRepository {
         }
         int id = key.intValue();
         review.setReviewId(id);
-
+        feedService.saveReview(review);
         log.debug("Review saved: {}", review);
         return review;
     }
@@ -97,6 +105,7 @@ public class JdbcReviewRepository {
                 .addValue("review_id", review.getReviewId());
 
         jdbc.update(UPDATE_REVIEW_SQL, params);
+        feedService.updateReview(review);
         log.debug("Review updated: {}", review);
         return findById(review.getReviewId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -110,16 +119,24 @@ public class JdbcReviewRepository {
         return reviews.isEmpty() ? Optional.empty() : Optional.of(reviews.getFirst());
     }
 
-    public List<Review> findReviewByFilmId(Integer filmId, Integer count) {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("film_id", filmId)
-                .addValue("count", count);
-        return jdbc.query(SELECT_REVIEW_BY_FILM_ID, params, reviewResultSetExtractor);
+    public List<Review> findReviewByFilmId(Optional<Integer> filmIdOpt, Integer count) {
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("count", count);
+        if (filmIdOpt.isPresent()) {
+            params.addValue("film_id", filmIdOpt.get());
+            return jdbc.query(SELECT_REVIEW_BY_FILM_ID, params, reviewResultSetExtractor);
+        }
+        return jdbc.query(SELECT_ALL_REVIEW, params, reviewResultSetExtractor);
     }
 
     public Integer deleteReviewById(Integer reviewId) {
+        Optional<Review> reviewOpt = findById(reviewId);
+        if (reviewOpt.isEmpty()) {
+            return 0;
+        }
+        Review review = reviewOpt.get();
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId);
+        feedService.deleteReview(review);
         return jdbc.update(DELETE_REVIEW_BY_ID_SQL, params);
     }
 
@@ -154,5 +171,4 @@ public class JdbcReviewRepository {
                 .addValue("score", -1);
         jdbc.update(DELETE_LIKE_DISLIKE, params);
     }
-
 }
