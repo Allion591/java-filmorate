@@ -44,8 +44,8 @@ public class JdbcLikeRepository implements LikeRepository {
                         .addValue("user_id", userId),
                 Integer.class
         );
-
         if (likeCount > 0) {
+            feedService.saveLike(filmId, userId);
             return;
         } else {
             String sql = "INSERT INTO likes (film_id, user_id) VALUES (:film_id, :user_id)";

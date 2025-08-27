@@ -15,9 +15,9 @@ public class ReviewResultSetExtractor implements ResultSetExtractor<List<Review>
 
     @Override
     public List<Review> extractData(ResultSet rs) throws SQLException {
-        Map<Integer, Review> reviewMap = new LinkedHashMap<>();
+        Map<Long, Review> reviewMap = new LinkedHashMap<>();
         while (rs.next()) {
-            int id = rs.getInt("review_id");
+            Long id = rs.getLong("review_id");
             if (!reviewMap.containsKey(id)) {
                 Review review = new Review();
                 review.setReviewId(id);

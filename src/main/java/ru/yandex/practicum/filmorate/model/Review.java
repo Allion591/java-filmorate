@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class Review {
-    private int reviewId;
+    private Long reviewId;
     private String content;
     private Boolean isPositive;
     private Integer useful;

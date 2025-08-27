@@ -50,12 +50,12 @@ public class ReviewService {
         return review1;
     }
 
-    public Review getReviewById(Integer id) {
+    public Review getReviewById(Long id) {
         return reviewRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Обзор с id = " + id + " не найден"));
     }
 
-    public ResponseEntity<Review> deleteReviewById(Integer reviewId) {
+    public ResponseEntity<Review> deleteReviewById(Long reviewId) {
         final Review existReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
         reviewRepository.deleteReviewById(reviewId);
@@ -63,11 +63,17 @@ public class ReviewService {
         return new ResponseEntity<>(existReview, HttpStatus.OK);
     }
 
-    public List<Review> getReviewByFilmId(Integer filmId, Integer count) {
+    public List<Review> getReviewByFilmId(Long filmId, Long count) {
+        if (filmId != null) {
+            if (filmId <= 0) {
+                throw new ValidationException("FilmId должен быть положительным");
+            }
+            filmRepository.getFilmById(filmId);
+        }
         return reviewRepository.findReviewByFilmId(filmId, count);
     }
 
-    public Review addLike(Integer reviewId, Integer userId) {
+    public Review addLike(Long reviewId, Long userId) {
         reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
         reviewRepository.addLike(reviewId, userId);
@@ -75,7 +81,7 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
     }
 
-    public Review deleteLike(Integer reviewId, Integer userId) {
+    public Review deleteLike(Long reviewId, Long userId) {
         reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
         reviewRepository.deleteLike(reviewId, userId);
@@ -83,7 +89,7 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
     }
 
-    public Review addDislike(Integer reviewId, Integer userId) {
+    public Review addDislike(Long reviewId, Long userId) {
         reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
         reviewRepository.addDisLike(reviewId, userId);
@@ -91,7 +97,7 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
     }
 
-    public Review deleteDislike(Integer reviewId, Integer userId) {
+    public Review deleteDislike(Long reviewId, Long userId) {
         reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
         reviewRepository.deleteDisLike(reviewId, userId);

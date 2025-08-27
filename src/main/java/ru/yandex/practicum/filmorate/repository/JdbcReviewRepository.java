@@ -32,12 +32,13 @@ public class JdbcReviewRepository {
             "SELECT COUNT(*) AS ROW_COUNT FROM review WHERE film_id = :film_id AND user_id = :user_id";
 
     private static final String SELECT_REVIEW_BY_FILM_ID =
-            "SELECT rs.REVIEW_ID, rs.CONTENT,rs.FILM_ID, rs.USER_ID,rs.IS_POSITIVE, SUM(rl.SCORE) AS USEFUL " +
-                    "FROM (SELECT * FROM REVIEW WHERE film_id=:film_id " +
-                    "ORDER BY review_id LIMIT :count) AS rs " +
-                    "LEFT JOIN REVIEW_LIKE rl " +
-                    "ON rs.REVIEW_ID = rl.REVIEW_ID " +
-                    "GROUP BY rs.REVIEW_ID;";
+            "SELECT r.REVIEW_ID, r.CONTENT, r.FILM_ID, r.USER_ID, r.IS_POSITIVE, COALESCE(SUM(rl.SCORE), 0) " +
+                    "AS USEFUL FROM REVIEW r " +
+                    "LEFT JOIN REVIEW_LIKE rl ON r.REVIEW_ID = rl.REVIEW_ID " +
+                    "WHERE (:film_id IS NULL OR r.FILM_ID = :film_id) " +
+                    "GROUP BY r.REVIEW_ID " +
+                    "ORDER BY USEFUL DESC " +
+                    "LIMIT :count";
 
     private static final String SELECT_REVIEW_BY_ID_SQL =
             "SELECT rs.REVIEW_ID, rs.CONTENT,rs.FILM_ID, rs.USER_ID, rs.IS_POSITIVE, SUM(rl.SCORE) AS USEFUL " +
@@ -74,7 +75,7 @@ public class JdbcReviewRepository {
         if (key == null) {
             throw new RuntimeException("Failed to get generated key for review");
         }
-        int id = key.intValue();
+        Long id = key.longValue();
         review.setReviewId(id);
         log.debug("Review saved: {}", review);
         return review;
@@ -101,27 +102,27 @@ public class JdbcReviewRepository {
                         "Обзор с id = " + review.getReviewId() + " не найден"));
     }
 
-    public Optional<Review> findById(int reviewId) {
+    public Optional<Review> findById(Long reviewId) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId);
         List<Review> reviews = jdbc.query(SELECT_REVIEW_BY_ID_SQL, params, reviewResultSetExtractor);
         return reviews.isEmpty() ? Optional.empty() : Optional.of(reviews.getFirst());
     }
 
-    public List<Review> findReviewByFilmId(Integer filmId, Integer count) {
+    public List<Review> findReviewByFilmId(Long filmId, Long count) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("film_id", filmId)
                 .addValue("count", count);
         return jdbc.query(SELECT_REVIEW_BY_FILM_ID, params, reviewResultSetExtractor);
     }
 
-    public Integer deleteReviewById(Integer reviewId) {
+    public Integer deleteReviewById(Long reviewId) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId);
         return jdbc.update(DELETE_REVIEW_BY_ID_SQL, params);
     }
 
-    public void addLike(Integer id, Integer userId) {
+    public void addLike(Long id, Long userId) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", id)
                 .addValue("user_id", userId)
@@ -129,7 +130,7 @@ public class JdbcReviewRepository {
         jdbc.update(ADD_LIKE_DISLIKE, params);
     }
 
-    public void addDisLike(Integer id, Integer userId) {
+    public void addDisLike(Long id, Long userId) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", id)
                 .addValue("user_id", userId)
@@ -137,7 +138,7 @@ public class JdbcReviewRepository {
         jdbc.update(ADD_LIKE_DISLIKE, params);
     }
 
-    public void deleteLike(Integer reviewId, Integer userId) {
+    public void deleteLike(Long reviewId, Long userId) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId)
                 .addValue("user_id", userId)
@@ -145,7 +146,7 @@ public class JdbcReviewRepository {
         jdbc.update(DELETE_LIKE_DISLIKE, params);
     }
 
-    public void deleteDisLike(Integer id, Integer userId) {
+    public void deleteDisLike(Long id, Long userId) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", id)
                 .addValue("user_id", userId)

@@ -28,14 +28,7 @@ public class JdbcFeedRepository implements FeedRepository {
     public Collection<FeedEvent> findFeedEventsByUserId(long userId) {
         String sql = "SELECT * FROM feed_events " +
                 "WHERE user_id = :userId " +
-                "OR (event_type IN ('LIKE', 'REVIEW') " +
-                "    AND user_id IN (" +
-                "        SELECT friend_id FROM friendship WHERE user_id = :userId" +
-                "        UNION " +
-                "        SELECT user_id FROM friendship WHERE friend_id = :userId" +
-                "    )" +
-                ")" +
-                "ORDER BY timestamp ASC";
+                "ORDER BY event_id ASC";
 
         return jdbc.query(sql, new MapSqlParameterSource("userId", userId), (rs, rowNum) -> {
             FeedEvent event = new FeedEvent();
