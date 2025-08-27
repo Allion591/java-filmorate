@@ -28,11 +28,13 @@ public class JdbcFeedRepository implements FeedRepository {
     public Collection<FeedEvent> findFeedEventsByUserId(long userId) {
         String sql = "SELECT * FROM feed_events " +
                 "WHERE user_id = :userId " +
-                "OR (event_type IN ('LIKE', 'REVIEW') AND user_id IN (" +
-                "    SELECT friend_id FROM friendship WHERE user_id = :userId" +
-                "    UNION " +
-                "    SELECT user_id FROM friendship WHERE friend_id = :userId" +
-                ")) " +
+                "OR (event_type IN ('LIKE', 'REVIEW') " +
+                "    AND user_id IN (" +
+                "        SELECT friend_id FROM friendship WHERE user_id = :userId" +
+                "        UNION " +
+                "        SELECT user_id FROM friendship WHERE friend_id = :userId" +
+                "    )" +
+                ")" +
                 "ORDER BY timestamp ASC";
 
         return jdbc.query(sql, new MapSqlParameterSource("userId", userId), (rs, rowNum) -> {
@@ -75,46 +77,43 @@ public class JdbcFeedRepository implements FeedRepository {
                 review.getUserId());
     }
 
-    @Override
     public void saveFriend(long userId, long friendId) {
-        String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
+        String sql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
                 "VALUES (:userId, 'FRIEND', 'ADD', :friendId, :timestamp)";
-        jdbc.update(eventSql, new MapSqlParameterSource()
+        MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("friendId", friendId)
-                .addValue("timestamp", System.currentTimeMillis()));
-        log.info("Событие добавление друга добавлено: friend_id={}, user_id={}", friendId, userId);
+                .addValue("timestamp", System.currentTimeMillis());
+        jdbc.update(sql, params);
     }
 
-    @Override
     public void removerFriend(long userId, long friendId) {
-        String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
+        String sql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
                 "VALUES (:userId, 'FRIEND', 'REMOVE', :friendId, :timestamp)";
-        jdbc.update(eventSql, new MapSqlParameterSource()
+        MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("friendId", friendId)
-                .addValue("timestamp", System.currentTimeMillis()));
-        log.info("Событие удаление добавлено: friend_id={}, user_id={}", friendId, userId);
+                .addValue("timestamp", System.currentTimeMillis());
+        jdbc.update(sql, params);
     }
 
     public void saveLike(Long filmId, Long userId) {
-        String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
+        String sql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
                 "VALUES (:userId, 'LIKE', 'ADD', :filmId, :timestamp)";
-        jdbc.update(eventSql, new MapSqlParameterSource()
+        MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("filmId", filmId)
-                .addValue("timestamp", System.currentTimeMillis()
-                ));
-        log.info("Событие добаваление лайка добавлено: film_id={}, user_id={}", filmId, userId);
+                .addValue("timestamp", System.currentTimeMillis());
+        jdbc.update(sql, params);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        String eventSql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
+        String sql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
                 "VALUES (:userId, 'LIKE', 'REMOVE', :filmId, :timestamp)";
-        jdbc.update(eventSql, new MapSqlParameterSource()
+        MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("filmId", filmId)
-                .addValue("timestamp", System.currentTimeMillis()));
-        log.info("Событие удаление лайка добавлено: film_id={}, user_id={}", filmId, userId);
+                .addValue("timestamp", System.currentTimeMillis());
+        jdbc.update(sql, params);
     }
 }

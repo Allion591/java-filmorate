@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.interfaces.FilmRepository;
 import ru.yandex.practicum.filmorate.interfaces.UserRepository;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -19,6 +20,7 @@ public class ReviewService {
     final JdbcReviewRepository reviewRepository;
     final FilmRepository filmRepository;
     final UserRepository userRepository;
+    final FeedService feedService;
 
     public Review createReview(Review review) {
         if (review.getFilmId() == null) {
@@ -33,7 +35,9 @@ public class ReviewService {
             throw new ValidationException("Обзор фильма с id=" + review.getFilmId()
                     + " созданный пользователем с id=" + review.getUserId() + " уже существет");
         }
-        return reviewRepository.save(review);
+        Review review1 = reviewRepository.save(review);
+        feedService.saveReview(review1);
+        return review1;
     }
 
     public Review updateReview(Review review) {
@@ -41,7 +45,9 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + review.getReviewId() + " не найден"));
         existReview.setContent(review.getContent());
         existReview.setIsPositive(review.getIsPositive());
-        return reviewRepository.update(existReview);
+        Review review1 = reviewRepository.update(existReview);
+        feedService.updateReview(review1);
+        return review1;
     }
 
     public Review getReviewById(Integer id) {
@@ -53,6 +59,7 @@ public class ReviewService {
         final Review existReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Обзор с reviewId = " + reviewId + " не найден"));
         reviewRepository.deleteReviewById(reviewId);
+        feedService.deleteReview(existReview);
         return new ResponseEntity<>(existReview, HttpStatus.OK);
     }
 
