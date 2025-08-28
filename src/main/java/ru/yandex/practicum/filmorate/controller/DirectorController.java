@@ -4,51 +4,48 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.interfaces.DirectorRepository;
-import ru.yandex.practicum.filmorate.response.MessageResponse;
+import ru.yandex.practicum.filmorate.service.DirectorService;
+
 import java.util.Collection;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/directors")
 public class DirectorController {
-    private final DirectorRepository directorRepository;
+    private final DirectorService directorService;
 
     @GetMapping
-    public ResponseEntity<Collection<Director>> findAll() {
-        log.debug("Запрос всех режиccёров");
-        return new ResponseEntity<>(directorRepository.findAll(), HttpStatus.OK);
+    public Collection<Director> findAll() {
+        log.info("Запрос всех режиccёров");
+        return directorService.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Director>> getDirectorById(@PathVariable Long id) {
+    public Director getDirectorById(@PathVariable Long id) {
         log.info("Получение режиссера по ID: {}", id);
-        return new ResponseEntity<>(directorRepository.findById(id), HttpStatus.OK);
+        return directorService.getDirectorById(id);
     }
 
     @PostMapping
-    public ResponseEntity<Director> createDirector(@Valid @RequestBody Director director) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Director createDirector(@Valid @RequestBody Director director) {
         log.info("Создание нового режиссера: {}", director.getDirectorName());
-        return new ResponseEntity<>(directorRepository.createDirector(director), HttpStatus.CREATED);
+        return directorService.createDirector(director);
     }
 
     @PutMapping
-    public ResponseEntity<Director> updateDirector(@Valid @RequestBody Director director) {
+    public Director updateDirector(@Valid @RequestBody Director director) {
         log.info("Обновление режиссера с ID: {}", director.getId());
-        getDirectorById((long) director.getId());
-        return new ResponseEntity<>(directorRepository.update(director), HttpStatus.OK);
+        return directorService.updateDirector(director);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<MessageResponse> deleteDirector(@PathVariable int id) {
+    public void deleteDirector(@PathVariable Long id) {
         log.info("Удаление режиссера с ID: {}", id);
-        directorRepository.deleteDirector(id);
-        return ResponseEntity.ok(new MessageResponse("Режиссер удален"));
+        directorService.deleteDirector(id);
     }
 }
