@@ -10,10 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Director {
-    private int id;
+    private Long id;
 
     @JsonProperty("name")
-    @NotBlank
     @NotBlank(message = "Имя режиссера не может быть пустым")
     private String directorName;
 }

@@ -8,6 +8,6 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode
 public class Like {
-    private final long idFilm;
-    private final long idUser;
+    private final Long idFilm;
+    private final Long idUser;
 }
