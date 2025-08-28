@@ -3,14 +3,13 @@ package ru.yandex.practicum.filmorate.repository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.interfaces.LikeRepository;
 import ru.yandex.practicum.filmorate.model.Like;
-
 import java.util.List;
 
 @Slf4j
@@ -19,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JdbcLikeRepository implements LikeRepository {
     private final NamedParameterJdbcOperations jdbcOperations;
+    private final FeedService feedService;
 
     @Override
     public List<Like> findLikesByFilmId(Long filmId) {
@@ -36,9 +36,19 @@ public class JdbcLikeRepository implements LikeRepository {
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        String sql = "INSERT INTO likes (film_id, user_id) VALUES (:film_id, :user_id)";
-
-        try {
+        String checkLikeSql = "SELECT COUNT(*) FROM likes WHERE film_id = :film_id AND user_id = :user_id";
+        Integer likeCount = jdbcOperations.queryForObject(
+                checkLikeSql,
+                new MapSqlParameterSource()
+                        .addValue("film_id", filmId)
+                        .addValue("user_id", userId),
+                Integer.class
+        );
+        if (likeCount > 0) {
+            feedService.saveLike(filmId, userId);
+            return;
+        } else {
+            String sql = "INSERT INTO likes (film_id, user_id) VALUES (:film_id, :user_id)";
             jdbcOperations.update(
                     sql,
                     new MapSqlParameterSource()
@@ -46,10 +56,7 @@ public class JdbcLikeRepository implements LikeRepository {
                             .addValue("user_id", userId)
             );
             log.info("Лайк добавлен: film_id={}, user_id={}", filmId, userId);
-        } catch (DataAccessException e) {
-            log.error("Ошибка при добавлении лайка: film_id={}, user_id={}", filmId, userId, e);
-            throw new NotFoundException("Пользователь или фильм не найдены") {
-            };
+            feedService.saveLike(filmId, userId);
         }
     }
 
@@ -63,6 +70,7 @@ public class JdbcLikeRepository implements LikeRepository {
         if (rowsUpdated == 0) {
             throw new NotFoundException("Пользователь или фильм не найдены");
         }
+        feedService.removeLike(filmId, userId);
     }
 
     @Override

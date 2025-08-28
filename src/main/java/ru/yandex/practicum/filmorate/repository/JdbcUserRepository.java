@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.interfaces.FriendRepository;
 import ru.yandex.practicum.filmorate.interfaces.UserRepository;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -65,27 +64,45 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    public String delete(User user) {
-        String sql = "DELETE FROM friendship WHERE user_id = :userId OR friend_id = :userId";
+    public void deleteById(Long id) {
+        String deleteFriendships = "DELETE FROM friendship WHERE user_id = :userId OR friend_id = :userId";
+        SqlParameterSource params = new MapSqlParameterSource("userId", id);
+        jdbcOperations.update(deleteFriendships, params);
 
-        SqlParameterSource params = new MapSqlParameterSource("userId", user.getId());
-        jdbcOperations.update(sql, params);
+        String deleteLikes = "DELETE FROM likes WHERE user_id = :userId";
+        jdbcOperations.update(deleteLikes, params);
 
-        String deleteUserSql = "DELETE FROM users WHERE user_id = :userId";
-        jdbcOperations.update(deleteUserSql, params);
-
-        return "Пользователь " + user.getId() + " удалён";
+        String deleteUser = "DELETE FROM users WHERE user_id = :userId";
+        int deleted = jdbcOperations.update(deleteUser, params);
+        if (deleted == 0) {
+            throw new NotFoundException("Пользователь с ID=" + id + " не найден");
+        }
     }
 
     @Override
     public Collection<User> findAll() {
-        String sql = "SELECT * FROM users";
+        String sql = """
+        SELECT
+            user_id,
+            email,
+            login,
+            name,
+            birthday
+        FROM users
+        ORDER BY user_id
+        """;
         return jdbcOperations.query(sql, this::makeUser);
     }
 
     @Override
-    public User getUserById(long id) {
-        String sql = "SELECT * FROM users WHERE user_id = :user_id";
+    public User getUserById(Long id) {
+        String sql = "SELECT " +
+                "user_id, " +
+                "email, " +
+                "login, " +
+                "name, " +
+                "birthday " +
+                "FROM users WHERE user_id = :user_id";
         SqlParameterSource parameterSource = new MapSqlParameterSource("user_id", id);
 
         try {
@@ -97,7 +114,7 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public User save(User user) {
-        log.info("Получена команда на создание пользователя {}", user);
+        log.info("Получена команда на создание пользователя : {} с id : {}", user.getName(), user.getId());
         log.info("Пользователь прошел валидацию");
         String sql = "INSERT INTO users (email, login, name, birthday) " +
                 "VALUES (:email, :login, :name, :birthday)";
@@ -117,7 +134,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    public Collection<User> findCommonFriends(long userId, long otherUserId) {
+    public Collection<User> findCommonFriends(Long userId, Long otherUserId) {
         String sql =
                 "SELECT u.* FROM users u " +
                         "JOIN friendship f1 ON u.user_id = f1.friend_id " +

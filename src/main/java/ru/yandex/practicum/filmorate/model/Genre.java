@@ -9,6 +9,6 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode(of = "id")
 public class Genre {
-    private final long id;
+    private final Long id;
     private final String name;
 }

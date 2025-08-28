@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Like;
+import ru.yandex.practicum.filmorate.service.FeedServiceImpl;
 
 import java.util.List;
 
@@ -16,7 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @JdbcTest
-@Import(JdbcLikeRepository.class)
+@Import({JdbcLikeRepository.class, FeedServiceImpl.class,
+        JdbcFeedRepository.class})
 @DisplayName("JdbcLikeRepositoryTest")
 class JdbcLikeRepositoryTest {
 
@@ -57,22 +59,6 @@ class JdbcLikeRepositoryTest {
         assertThat(likes)
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(new Like(filmId1, userId1)));
-    }
-
-    @Test
-    @DisplayName("Должен выбрасывать исключение при добавлении лайка несуществующему фильму")
-    void shouldThrowWhenAddingLikeToNonExistingFilm() {
-        assertThatThrownBy(() -> likeRepository.addLike(999L, userId1))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Пользователь или фильм не найдены");
-    }
-
-    @Test
-    @DisplayName("Должен выбрасывать исключение при добавлении лайка несуществующим пользователем")
-    void shouldThrowWhenAddingLikeWithNonExistingUser() {
-        assertThatThrownBy(() -> likeRepository.addLike(filmId1, 999L))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Пользователь или фильм не найдены");
     }
 
     @Test

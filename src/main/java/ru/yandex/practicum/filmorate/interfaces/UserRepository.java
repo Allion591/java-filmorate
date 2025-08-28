@@ -12,13 +12,13 @@ public interface UserRepository {
 
     public User update(User user);
 
-    public String delete(User user);
+    public void deleteById(Long id);
 
     public Collection<User> findAll();
 
-    public User getUserById(long id);
+    public User getUserById(Long id);
 
     public User save(User user);
 
-    public Collection<User> findCommonFriends(long userId, long otherUserId);
+    public Collection<User> findCommonFriends(Long userId, Long otherUserId);
 }
