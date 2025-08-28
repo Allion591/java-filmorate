@@ -99,7 +99,7 @@ public class JdbcGenreRepository implements GenreRepository {
         }
 
         Genre genre = new Genre(genreId, genreName);
-        log.info("Добавляю жанр {} в фильм {}", genre, film.getId());
+        log.info("Добавляю жанр {} в фильм {}", genre.getName(), film.getId());
         film.addGenres(genre);
     }
 

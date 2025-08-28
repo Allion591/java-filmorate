@@ -25,7 +25,7 @@ public class JdbcFeedRepository implements FeedRepository {
             "entity_id, timestamp) VALUES (:userId, 'REVIEW', 'REMOVE', :reviewId, :timestamp)";
 
     @Override
-    public Collection<FeedEvent> findFeedEventsByUserId(long userId) {
+    public Collection<FeedEvent> findFeedEventsByUserId(Long userId) {
         String sql = "SELECT * FROM feed_events " +
                 "WHERE user_id = :userId " +
                 "ORDER BY event_id ASC";
@@ -70,7 +70,7 @@ public class JdbcFeedRepository implements FeedRepository {
                 review.getUserId());
     }
 
-    public void saveFriend(long userId, long friendId) {
+    public void saveFriend(Long userId, Long friendId) {
         String sql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
                 "VALUES (:userId, 'FRIEND', 'ADD', :friendId, :timestamp)";
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -80,7 +80,7 @@ public class JdbcFeedRepository implements FeedRepository {
         jdbc.update(sql, params);
     }
 
-    public void removerFriend(long userId, long friendId) {
+    public void removerFriend(Long userId, Long friendId) {
         String sql = "INSERT INTO feed_events (user_id, event_type, operation, entity_id, timestamp) " +
                 "VALUES (:userId, 'FRIEND', 'REMOVE', :friendId, :timestamp)";
         MapSqlParameterSource params = new MapSqlParameterSource()

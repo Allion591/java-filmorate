@@ -112,12 +112,12 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     private void loadAdditionalData(Film film) {
-        log.info("Запускаю метод loadAdditionalData: {}", film);
+        log.info("Запускаю метод loadAdditionalData: {} с id : {}", film.getName(), film.getId());
         List<Like> likes = likeRepository.findLikesByFilmId(film.getId());
         film.setLikes(new TreeSet<>(Comparator.comparing(Like::getIdUser)));
         film.getLikes().addAll(likes);
 
-        Set<Director> directors = directorRepository.loadDirectors(film.getId().intValue());
+        Set<Director> directors = directorRepository.loadDirectors(film.getId());
         film.setDirectors(directors);
     }
 
@@ -151,7 +151,7 @@ public class JdbcFilmRepository implements FilmRepository {
         if (film == null) {
             throw new NotFoundException("Фильм не найден");
         }
-        log.info("Возвращаю фильм : {}", film);
+        log.info("Возвращаю фильм : {} id : {}", film.getName(), film.getId());
         return film;
     }
 
@@ -186,7 +186,6 @@ public class JdbcFilmRepository implements FilmRepository {
     public Collection<Film> findPopularFilms(Long count) {
         log.info("Получаю популярные фильмы: {}", count);
 
-        // Сначала получаем ID фильмов с количеством лайков, отсортированные по популярности
         String popularIdsSql = "SELECT f.film_id, COUNT(l.user_id) as likes_count " +
                 "FROM films f " +
                 "LEFT JOIN likes l ON f.film_id = l.film_id " +
@@ -243,7 +242,7 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     @Override
-    public Collection<Film> findPopular(Integer count, Integer genreId, Integer year) {
+    public Collection<Film> findPopular(Long count, Long genreId, Long year) {
         log.info("Получаю популярные фильмы c фильтрами: count={}, genreId={}, year={}", count, genreId, year);
 
         String popularIdsSql = """
@@ -259,7 +258,7 @@ public class JdbcFilmRepository implements FilmRepository {
         LIMIT :count
     """;
 
-        int limit = (count == null || count <= 0) ? 10 : count;
+        Long limit = (count == null || count <= 0) ? 10 : count;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("count", limit)
                 .addValue("genreId", genreId)
@@ -357,7 +356,7 @@ public class JdbcFilmRepository implements FilmRepository {
     @Override
     public Film save(Film film) {
         mpaRepository.findById(film.getMpa().getId());
-        log.info("Сохраняю фильм : {}", film);
+        log.info("Сохраняю фильм : {} id: {}", film.getName(), film.getId());
         String sql = "INSERT INTO films (films_name, description, release_date, duration, mpa_id) " +
                 "VALUES (:films_name, :description, :releaseDate, :duration, :mpaId)";
 
@@ -372,7 +371,7 @@ public class JdbcFilmRepository implements FilmRepository {
         try {
             jdbcOperations.update(sql, params, keyHolder, new String[]{"film_id"});
         } catch (DataAccessException e) {
-            log.error("Ошибка при сохранении фильма: {}", film, e);
+            log.error("Ошибка при сохранении фильма: {} id: {}", film.getName(), film.getId());
             throw new DataAccessException("Ошибка сохранения фильма", e) {
             };
         }
@@ -387,7 +386,7 @@ public class JdbcFilmRepository implements FilmRepository {
 
     @Override
     public Film update(Film film) {
-        log.info("Получена команда на обновление фильма {}", film);
+        log.info("Получена команда на обновление фильма {} id: {}", film.getName(), film.getId());
         log.info("Фильм успешно прошел валидацию для обновления");
 
         String sql = "UPDATE films SET " +
@@ -439,8 +438,8 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     @Override
-    public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
-        directorRepository.findById((long) directorId);
+    public Collection<Film> getFilmsByDirectorId(Long directorId, String sortBy) {
+        directorRepository.findById(directorId);
         log.info("Получаю фильмы по id режиссера : {}", directorId);
         log.info("Сортирую по : {}", sortBy);
         String sql;

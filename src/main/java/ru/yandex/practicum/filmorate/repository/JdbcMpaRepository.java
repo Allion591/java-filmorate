@@ -42,7 +42,7 @@ public class JdbcMpaRepository implements MpaRepository {
         String sql = "SELECT * FROM mpa GROUP BY mpa_id";
         return jdbcOperations.query(
                 sql, (rs, rowNum) -> new Mpa(
-                        rs.getInt("mpa_id"),
+                        rs.getLong("mpa_id"),
                         rs.getString("mpa_name")
                 ));
     }

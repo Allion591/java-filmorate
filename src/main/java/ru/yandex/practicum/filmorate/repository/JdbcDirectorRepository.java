@@ -26,7 +26,7 @@ public class JdbcDirectorRepository implements DirectorRepository {
         this.jdbc = jdbc;
     }
 
-    private static final String SELECT_ALL_DIRECTORS = "SELECT * FROM directors";
+    private static final String SELECT_ALL_DIRECTORS = "SELECT director_id, director_name FROM directors";
 
     private static final String SELECT_FILM_DIRECTORS_SQL =
             "SELECT d.director_id, d.director_name FROM directors d " +
@@ -62,11 +62,11 @@ public class JdbcDirectorRepository implements DirectorRepository {
     }
 
     @Override
-    public Set<Director> loadDirectors(int filmId) {
+    public Set<Director> loadDirectors(Long filmId) {
         MapSqlParameterSource params = new MapSqlParameterSource("filmId", filmId);
         return new LinkedHashSet<>(jdbc.query(SELECT_FILM_DIRECTORS_SQL, params, (rs, rowNum) -> {
             Director director = new Director();
-            director.setId(rs.getInt("director_id"));
+            director.setId(rs.getLong("director_id"));
             director.setDirectorName(rs.getString("director_name"));
             return director;
         }));
@@ -77,32 +77,32 @@ public class JdbcDirectorRepository implements DirectorRepository {
         long directorId = rs.getLong("director_id");
         if (directorId != 0 && !rs.wasNull()) {
             Director director = new Director();
-            director.setId((int) directorId);
+            director.setId(directorId);
             director.setDirectorName(rs.getString("director_name"));
             film.getDirectors().add(director);
-            log.debug("Добавлен режиссер ID: {} к фильму ID: {}", directorId, film.getId());
+            log.info("Добавлен режиссер ID: {} к фильму ID: {}", directorId, film.getId());
         }
     }
 
     @Override
-    public List<Director> findAll() {
-        log.debug("Возврат всех режиссеров");
+    public Collection<Director> findAll() {
+        log.info("Возврат всех режиссеров");
         return jdbc.query(SELECT_ALL_DIRECTORS, (rs, rowNum) -> {
             Director director = new Director();
-            director.setId(rs.getInt("director_id"));
+            director.setId(rs.getLong("director_id"));
             director.setDirectorName(rs.getString("director_name"));
             return director;
         });
     }
 
     @Override
-    public Optional<Director> findById(Long id) {
-        log.debug("Возврат режиссера по id: {}", id);
+    public Director findById(Long id) {
+        log.info("Возврат режиссера по id: {}", id);
         List<Director> directors = jdbc.query(SELECT_DIRECTOR_BY_ID,
                 new MapSqlParameterSource("id", id),
                 (rs, rowNum) -> {
                     Director director = new Director();
-                    director.setId(rs.getInt("director_id"));
+                    director.setId(rs.getLong("director_id"));
                     director.setDirectorName(rs.getString("director_name"));
                     return director;
                 });
@@ -110,7 +110,7 @@ public class JdbcDirectorRepository implements DirectorRepository {
             log.info("Режиссер не найден: {}", id);
             throw new NotFoundException("Режиссер не найден");
         } else {
-            return Optional.of(directors.getFirst());
+            return directors.getFirst();
         }
     }
 
@@ -124,8 +124,8 @@ public class JdbcDirectorRepository implements DirectorRepository {
 
         jdbc.update(sql, params, keyHolder, new String[]{"director_id"});
 
-        director.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
-        log.info("Режиссер добавлен в базу: {}", director);
+        director.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+        log.info("Режиссер добавлен в базу: {} с именем : {}", director.getId(), director.getDirectorName());
         return director;
     }
 
@@ -146,7 +146,7 @@ public class JdbcDirectorRepository implements DirectorRepository {
     }
 
     @Override
-    public void deleteDirector(int id) {
+    public void deleteDirector(Long id) {
         String sql = "DELETE FROM directors WHERE director_id = :id";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
