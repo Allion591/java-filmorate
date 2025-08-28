@@ -45,8 +45,8 @@ public class RecommendationControllerTest {
 
     @BeforeEach
     void init() {
-        mpa = new Mpa(1, "G");
-        Genre comedy = new Genre(1, "Комедия");
+        mpa = new Mpa(1L, "G");
+        Genre comedy = new Genre(1L, "Комедия");
         genres = new LinkedHashSet<>();
         genres.add(comedy);
     }
@@ -136,6 +136,6 @@ public class RecommendationControllerTest {
 
     private void likeFilm(long filmId, long userId) throws Exception {
         mockMvc.perform(put("/films/{id}/like/{userId}", filmId, userId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 }

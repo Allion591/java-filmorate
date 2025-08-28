@@ -173,8 +173,8 @@ public class JdbcFilmRepositoryTest {
     @DisplayName("Should filter popular films by genre")
     void shouldFilterPopularFilmsByGenre() {
         // arrange: two films in different genres, both in same year
-        Film comedy = createFilmWithGenreAndDate("Comedy", 1, LocalDate.of(2010, 1, 1));
-        Film drama = createFilmWithGenreAndDate("Drama", 2, LocalDate.of(2010, 1, 1));
+        Film comedy = createFilmWithGenreAndDate("Comedy", 1L, LocalDate.of(2010, 1, 1));
+        Film drama = createFilmWithGenreAndDate("Drama", 2L, LocalDate.of(2010, 1, 1));
         Film s1 = filmRepository.save(comedy);
         Film s2 = filmRepository.save(drama);
 
@@ -182,7 +182,7 @@ public class JdbcFilmRepositoryTest {
         likeRepository.addLike(s1.getId(), u.getId());
         likeRepository.addLike(s2.getId(), u.getId());
 
-        Collection<Film> result = filmRepository.findPopular(10, 1, null);
+        Collection<Film> result = filmRepository.findPopular(10L, 1L, null);
 
         assertThat(result).isNotEmpty();
         assertThat(result).allSatisfy(f ->
@@ -193,8 +193,8 @@ public class JdbcFilmRepositoryTest {
     @Test
     @DisplayName("Should filter popular films by year")
     void shouldFilterPopularFilmsByYear() {
-        Film f2009 = createFilmWithGenreAndDate("F2009", 1, LocalDate.of(2009, 6, 1));
-        Film f2010 = createFilmWithGenreAndDate("F2010", 1, LocalDate.of(2010, 7, 1));
+        Film f2009 = createFilmWithGenreAndDate("F2009", 1L, LocalDate.of(2009, 6, 1));
+        Film f2010 = createFilmWithGenreAndDate("F2010", 1L, LocalDate.of(2010, 7, 1));
         Film s1 = filmRepository.save(f2009);
         Film s2 = filmRepository.save(f2010);
 
@@ -202,7 +202,7 @@ public class JdbcFilmRepositoryTest {
         likeRepository.addLike(s1.getId(), u.getId());
         likeRepository.addLike(s2.getId(), u.getId());
 
-        Collection<Film> result = filmRepository.findPopular(10, null, 2010);
+        Collection<Film> result = filmRepository.findPopular(10L, null, 2010L);
 
         assertThat(result)
                 .extracting(Film::getReleaseDate)
@@ -212,9 +212,9 @@ public class JdbcFilmRepositoryTest {
     @Test
     @DisplayName("Should filter by genre and year and order by likes desc then film_id")
     void shouldFilterByGenreAndYearAndOrderByLikes() {
-        Film a = createFilmWithGenreAndDate("A", 1, LocalDate.of(2010, 1, 1));
-        Film b = createFilmWithGenreAndDate("B", 1, LocalDate.of(2010, 5, 1));
-        Film c = createFilmWithGenreAndDate("C", 2, LocalDate.of(2010, 6, 1));
+        Film a = createFilmWithGenreAndDate("A", 1L, LocalDate.of(2010, 1, 1));
+        Film b = createFilmWithGenreAndDate("B", 1L, LocalDate.of(2010, 5, 1));
+        Film c = createFilmWithGenreAndDate("C", 2L, LocalDate.of(2010, 6, 1));
 
         Film sa = filmRepository.save(a);
         Film sb = filmRepository.save(b);
@@ -229,14 +229,14 @@ public class JdbcFilmRepositoryTest {
         likeRepository.addLike(sc.getId(), u1.getId());
         likeRepository.addLike(sc.getId(), u2.getId());
 
-        Collection<Film> result = filmRepository.findPopular(10, 1, 2010);
+        Collection<Film> result = filmRepository.findPopular(10L, 1L, 2010L);
 
         assertThat(result)
                 .extracting(Film::getName)
                 .containsExactly("B", "A");
     }
 
-    private Film createFilmWithGenreAndDate(String name, int genreId, LocalDate date) {
+    private Film createFilmWithGenreAndDate(String name, Long genreId, LocalDate date) {
         Film f = new Film();
         f.setName(name);
         f.setDescription("desc");

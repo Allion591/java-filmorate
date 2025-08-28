@@ -205,9 +205,7 @@ class UserControllerTest {
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, user2Id))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Пользователь с ид " + user1Id +
-                        " и пользователь с ид " + user2Id + " теперь друзья!"));
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -229,13 +227,11 @@ class UserControllerTest {
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, user2Id))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(delete("/users/{id}/friends/{friendId}", user1Id, user2Id))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message")
-                        .value("Пользователь c ID" + user2Id + " теперь вам не друг"));
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -262,10 +258,10 @@ class UserControllerTest {
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", userId, friend1Id))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
         mockMvc.perform(put("/users/{id}/friends/{friendId}", userId, friend2Id))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/users/{id}/friends", userId))
                 .andDo(print())
@@ -287,10 +283,10 @@ class UserControllerTest {
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", user1Id, commonId))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
         mockMvc.perform(put("/users/{id}/friends/{friendId}", user2Id, commonId))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/users/{id}/friends/common/{otherId}", user1Id, user2Id))
                 .andDo(print())

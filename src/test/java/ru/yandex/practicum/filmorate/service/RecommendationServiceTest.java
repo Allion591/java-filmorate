@@ -38,7 +38,7 @@ class RecommendationServiceTest {
         f.setDescription("d");
         f.setReleaseDate(LocalDate.of(2010,1,1));
         f.setDuration(Duration.ofMinutes(100));
-        f.setMpa(new Mpa(1, "G"));
+        f.setMpa(new Mpa(1L, "G"));
         return f;
     }
 

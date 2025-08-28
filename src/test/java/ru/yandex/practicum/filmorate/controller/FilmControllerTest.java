@@ -52,8 +52,8 @@ public class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        Mpa mpa = new Mpa(1, "G");
-        Genre comedy = new Genre(1, "Комедия");
+        Mpa mpa = new Mpa(1L, "G");
+        Genre comedy = new Genre(1L, "Комедия");
 
         Set<Genre> genres = new LinkedHashSet<>();
         genres.add(comedy);
@@ -216,7 +216,7 @@ public class FilmControllerTest {
         anotherFilm.setDescription("Another description");
         anotherFilm.setReleaseDate(LocalDate.of(2010, 5, 15));
         anotherFilm.setDuration(Duration.ofMinutes(90));
-        anotherFilm.setMpa(new Mpa(1, "G"));
+        anotherFilm.setMpa(new Mpa(1L, "G"));
         mockMvc.perform(post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(anotherFilm)));
@@ -271,7 +271,7 @@ public class FilmControllerTest {
         Long userId = userJson.get("id").asLong();
 
         mockMvc.perform(put("/films/{id}/like/{userId}", filmId, userId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -299,11 +299,10 @@ public class FilmControllerTest {
         Long userId = userJson.get("id").asLong();
 
         mockMvc.perform(put("/films/{id}/like/{userId}", filmId, userId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(delete("/films/{id}/like/{userId}", filmId, userId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Лайк удален"));
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -361,9 +360,9 @@ public class FilmControllerTest {
         comedyFilm.setDescription("desc");
         comedyFilm.setReleaseDate(LocalDate.of(2010, 1, 1));
         comedyFilm.setDuration(Duration.ofMinutes(100));
-        comedyFilm.setMpa(new Mpa(1, "G"));
+        comedyFilm.setMpa(new Mpa(1L, "G"));
         Set<Genre> comedyGenres = new LinkedHashSet<>();
-        comedyGenres.add(new Genre(1, "Комедия"));
+        comedyGenres.add(new Genre(1L, "Комедия"));
         comedyFilm.setGenres(comedyGenres);
 
         JsonNode comedyNode = objectMapper.readTree(
@@ -378,9 +377,9 @@ public class FilmControllerTest {
         dramaFilm.setDescription("desc");
         dramaFilm.setReleaseDate(LocalDate.of(2010, 1, 1));
         dramaFilm.setDuration(Duration.ofMinutes(110));
-        dramaFilm.setMpa(new Mpa(1, "G"));
+        dramaFilm.setMpa(new Mpa(1L, "G"));
         Set<Genre> dramaGenres = new LinkedHashSet<>();
-        dramaGenres.add(new Genre(2, "Драма"));
+        dramaGenres.add(new Genre(2L, "Драма"));
         dramaFilm.setGenres(dramaGenres);
 
         JsonNode dramaNode = objectMapper.readTree(
@@ -391,9 +390,9 @@ public class FilmControllerTest {
         Long dramaFilmId = dramaNode.get("id").asLong();
 
         mockMvc.perform(put("/films/{id}/like/{userId}", comedyFilmId, userId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
         mockMvc.perform(put("/films/{id}/like/{userId}", dramaFilmId, userId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/films/popular").param("genreId", "1"))
                 .andExpect(status().isOk())
@@ -414,8 +413,8 @@ public class FilmControllerTest {
         film2009.setDescription("desc");
         film2009.setReleaseDate(LocalDate.of(2009, 6, 1));
         film2009.setDuration(Duration.ofMinutes(90));
-        film2009.setMpa(new Mpa(1, "G"));
-        film2009.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
+        film2009.setMpa(new Mpa(1L, "G"));
+        film2009.setGenres(new LinkedHashSet<>(Set.of(new Genre(1L, "Комедия"))));
 
         Long id2009 = objectMapper.readTree(
                 mockMvc.perform(post("/films")
@@ -428,8 +427,8 @@ public class FilmControllerTest {
         film2010.setDescription("desc");
         film2010.setReleaseDate(LocalDate.of(2010, 7, 1));
         film2010.setDuration(Duration.ofMinutes(95));
-        film2010.setMpa(new Mpa(1, "G"));
-        film2010.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
+        film2010.setMpa(new Mpa(1L, "G"));
+        film2010.setGenres(new LinkedHashSet<>(Set.of(new Genre(1L, "Комедия"))));
 
         Long id2010 = objectMapper.readTree(
                 mockMvc.perform(post("/films")
@@ -437,8 +436,8 @@ public class FilmControllerTest {
                                 .content(objectMapper.writeValueAsString(film2010)))
                         .andReturn().getResponse().getContentAsString()).get("id").asLong();
 
-        mockMvc.perform(put("/films/{id}/like/{userId}", id2009, userId)).andExpect(status().isOk());
-        mockMvc.perform(put("/films/{id}/like/{userId}", id2010, userId)).andExpect(status().isOk());
+        mockMvc.perform(put("/films/{id}/like/{userId}", id2009, userId)).andExpect(status().isNoContent());
+        mockMvc.perform(put("/films/{id}/like/{userId}", id2010, userId)).andExpect(status().isNoContent());
 
         mockMvc.perform(get("/films/popular").param("year", "2010"))
                 .andExpect(status().isOk())
@@ -463,8 +462,8 @@ public class FilmControllerTest {
         filmA.setDescription("desc");
         filmA.setReleaseDate(LocalDate.of(2010, 1, 1));
         filmA.setDuration(Duration.ofMinutes(100));
-        filmA.setMpa(new Mpa(1, "G"));
-        filmA.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
+        filmA.setMpa(new Mpa(1L, "G"));
+        filmA.setGenres(new LinkedHashSet<>(Set.of(new Genre(1L, "Комедия"))));
         Long idA = objectMapper.readTree(
                 mockMvc.perform(post("/films")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -476,8 +475,8 @@ public class FilmControllerTest {
         filmB.setDescription("desc");
         filmB.setReleaseDate(LocalDate.of(2010, 5, 1));
         filmB.setDuration(Duration.ofMinutes(100));
-        filmB.setMpa(new Mpa(1, "G"));
-        filmB.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
+        filmB.setMpa(new Mpa(1L, "G"));
+        filmB.setGenres(new LinkedHashSet<>(Set.of(new Genre(1L, "Комедия"))));
         Long idB = objectMapper.readTree(
                 mockMvc.perform(post("/films")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -489,19 +488,19 @@ public class FilmControllerTest {
         filmC.setDescription("desc");
         filmC.setReleaseDate(LocalDate.of(2010, 6, 1));
         filmC.setDuration(Duration.ofMinutes(100));
-        filmC.setMpa(new Mpa(1, "G"));
-        filmC.setGenres(new LinkedHashSet<>(Set.of(new Genre(2, "Драма"))));
+        filmC.setMpa(new Mpa(1L, "G"));
+        filmC.setGenres(new LinkedHashSet<>(Set.of(new Genre(2L, "Драма"))));
         Long idC = objectMapper.readTree(
                 mockMvc.perform(post("/films")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(filmC)))
                         .andReturn().getResponse().getContentAsString()).get("id").asLong();
 
-        mockMvc.perform(put("/films/{id}/like/{userId}", idA, u1)).andExpect(status().isOk());
-        mockMvc.perform(put("/films/{id}/like/{userId}", idB, u1)).andExpect(status().isOk());
-        mockMvc.perform(put("/films/{id}/like/{userId}", idB, u2)).andExpect(status().isOk());
-        mockMvc.perform(put("/films/{id}/like/{userId}", idC, u1)).andExpect(status().isOk());
-        mockMvc.perform(put("/films/{id}/like/{userId}", idC, u2)).andExpect(status().isOk());
+        mockMvc.perform(put("/films/{id}/like/{userId}", idA, u1)).andExpect(status().isNoContent());
+        mockMvc.perform(put("/films/{id}/like/{userId}", idB, u1)).andExpect(status().isNoContent());
+        mockMvc.perform(put("/films/{id}/like/{userId}", idB, u2)).andExpect(status().isNoContent());
+        mockMvc.perform(put("/films/{id}/like/{userId}", idC, u1)).andExpect(status().isNoContent());
+        mockMvc.perform(put("/films/{id}/like/{userId}", idC, u2)).andExpect(status().isNoContent());
 
         mockMvc.perform(get("/films/popular").param("genreId", "1").param("year", "2010").param("count", "10"))
                 .andExpect(status().isOk())
