@@ -22,15 +22,13 @@ public class UserService {
         this.friendRepository = friendRepository;
     }
 
-    public String addFriend(Long userId, Long anotherUserId) {
+    public void addFriend(Long userId, Long anotherUserId) {
         log.info("Добавление друга");
         friendRepository.addFriend(userId, anotherUserId);
-        return "Пользователь с ид " + userId + " и пользователь с ид " + anotherUserId + " теперь друзья!";
     }
 
-    public String removeFriend(Long userId, Long anotherUserId) {
+    public void removeFriend(Long userId, Long anotherUserId) {
         friendRepository.removeFriend(userId, anotherUserId);
-        return "Пользователь c ID" + anotherUserId + " теперь вам не друг";
     }
 
     public Collection<User> getFriends(Long userId) {

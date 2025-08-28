@@ -2,19 +2,19 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.interfaces.FeedRepository;
 import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.repository.JdbcFeedRepository;
 import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
 public class FeedServiceImpl implements FeedService {
-    private final JdbcFeedRepository feedRepository;
+    private final FeedRepository feedRepository;
 
     @Override
-    public Collection<FeedEvent> getFeedEvents(long userId) {
+    public Collection<FeedEvent> getFeedEvents(Long userId) {
         return feedRepository.findFeedEventsByUserId(userId);
     }
 
@@ -34,12 +34,12 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public void saveFriend(long userId, long friendId) {
+    public void saveFriend(Long userId, Long friendId) {
         feedRepository.saveFriend(userId, friendId);
     }
 
     @Override
-    public void removerFriend(long userId, long friendId) {
+    public void removerFriend(Long userId, Long friendId) {
         feedRepository.removerFriend(userId, friendId);
     }
 

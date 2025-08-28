@@ -51,8 +51,8 @@ public class FilmService {
         return filmRepository.findPopularFilms(count);
     }
 
-    public Collection<Film> getPopular(Integer count, Integer genreId, Integer year) {
-        int c = (count == null || count <= 0) ? 10 : count;
+    public Collection<Film> getPopular(Long count, Long genreId, Long year) {
+        Long c = (count == null || count <= 0) ? 10 : count;
         return filmRepository.findPopular(c, genreId, year);
     }
 
@@ -100,7 +100,7 @@ public class FilmService {
         return filmRepository.findCommonFilms(userId, friendId);
     }
 
-    public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy) {
+    public Collection<Film> getFilmsByDirectorId(Long directorId, String sortBy) {
         return filmRepository.getFilmsByDirectorId(directorId, sortBy);
     }
 
