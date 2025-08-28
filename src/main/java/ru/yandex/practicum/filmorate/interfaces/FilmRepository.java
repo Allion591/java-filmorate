@@ -17,11 +17,11 @@ public interface FilmRepository {
 
     public Collection<Film> findPopularFilms(Long count);
 
-    public Collection<Film> findPopular(Integer count, Integer genreId, Integer year);
+    public Collection<Film> findPopular(Long count, Long genreId, Long year);
 
     public Collection<Film> findCommonFilms(Long userId, Long friendId);
 
-    public Collection<Film> getFilmsByDirectorId(int directorId, String sortBy);
+    public Collection<Film> getFilmsByDirectorId(Long directorId, String sortBy);
 
     public Collection<Film> searchFilmsByTitle(String query);
 

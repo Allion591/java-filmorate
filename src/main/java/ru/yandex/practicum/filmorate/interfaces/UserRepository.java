@@ -16,9 +16,9 @@ public interface UserRepository {
 
     public Collection<User> findAll();
 
-    public User getUserById(long id);
+    public User getUserById(Long id);
 
     public User save(User user);
 
-    public Collection<User> findCommonFriends(long userId, long otherUserId);
+    public Collection<User> findCommonFriends(Long userId, Long otherUserId);
 }

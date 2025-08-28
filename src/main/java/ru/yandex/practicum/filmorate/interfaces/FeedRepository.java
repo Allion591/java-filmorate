@@ -7,7 +7,7 @@ import java.util.Collection;
 
 public interface FeedRepository {
 
-    public Collection<FeedEvent> findFeedEventsByUserId(long userId);
+    public Collection<FeedEvent> findFeedEventsByUserId(Long userId);
 
     public void saveReview(Review review);
 
@@ -15,9 +15,9 @@ public interface FeedRepository {
 
     public void deleteReview(Review review);
 
-    public void saveFriend(long userId, long friendId);
+    public void saveFriend(Long userId, Long friendId);
 
-    public void removerFriend(long userId, long friendId);
+    public void removerFriend(Long userId, Long friendId);
 
     public void saveLike(Long filmId, Long userId);
 
