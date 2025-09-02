@@ -9,7 +9,6 @@ import jakarta.validation.ConstraintViolationException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.NotFriendException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +31,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFoundException(NotFoundException ex) {
         Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("message", ex.getMessage());
+        errorResponse.put("error", ex.getMessage());
         errorResponse.put("status", HttpStatus.NOT_FOUND.name());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }

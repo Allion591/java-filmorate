@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.interfaces.GenreRepository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -100,7 +99,7 @@ public class JdbcGenreRepository implements GenreRepository {
         }
 
         Genre genre = new Genre(genreId, genreName);
-        log.info("Добавляю жанр {} в фильм {}", genre, film.getId());
+        log.info("Добавляю жанр {} в фильм {}", genre.getName(), film.getId());
         film.addGenres(genre);
     }
 

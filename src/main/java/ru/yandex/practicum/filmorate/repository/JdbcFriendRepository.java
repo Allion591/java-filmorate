@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.NotFriendException;
+import ru.yandex.practicum.filmorate.interfaces.FeedService;
 import ru.yandex.practicum.filmorate.interfaces.FriendRepository;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -23,9 +24,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JdbcFriendRepository implements FriendRepository {
     private final NamedParameterJdbcOperations jdbcOperations;
+    private final FeedService feedService;
 
     @Override
-    public void addFriend(long userId, long friendId) {
+    public void addFriend(Long userId, Long friendId) {
         if (!existsById(userId) || !existsById(friendId)) {
             throw new NotFoundException("Один из пользователей не найден");
         }
@@ -46,10 +48,12 @@ public class JdbcFriendRepository implements FriendRepository {
                 .addValue("friendId", friendId);
 
         jdbcOperations.update(sql, params);
+
+        feedService.saveFriend(userId, friendId);
     }
 
     @Override
-    public void removeFriend(long userId, long friendId) {
+    public void removeFriend(Long userId, Long friendId) {
         if (!existsById(userId) || !existsById(friendId)) {
             throw new NotFoundException("Один из пользователей не найден");
         }
@@ -64,6 +68,8 @@ public class JdbcFriendRepository implements FriendRepository {
 
         if (deletedCount == 0) {
             throw new NotFriendException("Пользователи не являются друзьями");
+        } else {
+           feedService.removerFriend(userId, friendId);
         }
     }
 
@@ -97,7 +103,7 @@ public class JdbcFriendRepository implements FriendRepository {
     }
 
     @Override
-    public boolean existsById(long userId) {
+    public boolean existsById(Long userId) {
         String sql = "SELECT EXISTS(SELECT 1 FROM users WHERE user_id = :id)";
         return Boolean.TRUE.equals(jdbcOperations.queryForObject(
                 sql,
@@ -107,7 +113,7 @@ public class JdbcFriendRepository implements FriendRepository {
     }
 
     @Override
-    public List<User> findFriendsByUserId(long userId) {
+    public List<User> findFriendsByUserId(Long userId) {
         if (!existsById(userId)) {
             throw new NotFoundException("Один из пользователей не найден");
         }
@@ -139,7 +145,6 @@ public class JdbcFriendRepository implements FriendRepository {
                 parameterSource,
                 (rsFriends, rowNumFriends) -> rsFriends.getLong("friend_id")
         );
-        log.info("id друзей {}", friends);
         user.getFriends().clear();
         user.getFriends().addAll(friends);
     }

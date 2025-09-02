@@ -34,8 +34,8 @@ public class FilmServiceTest {
 
     @BeforeEach
     void setUp() {
-        Mpa mpa = new Mpa(1, "G");
-        Genre comedy = new Genre(1, "Комедия");
+        Mpa mpa = new Mpa(1L, "G");
+        Genre comedy = new Genre(1L, "Комедия");
 
         Set<Genre> genres = new LinkedHashSet<>();
         genres.add(comedy);

@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.interfaces.FriendRepository;
 import ru.yandex.practicum.filmorate.interfaces.UserRepository;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FeedServiceImpl;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -20,7 +21,9 @@ import static org.assertj.core.api.Assertions.*;
 @JdbcTest
 @Import({
         JdbcUserRepository.class,
-        JdbcFriendRepository.class
+        JdbcFriendRepository.class,
+        FeedServiceImpl.class,
+        JdbcFeedRepository.class
 })
 @DisplayName("JdbcUserRepositoryTest")
 public class JdbcUserRepositoryTest {
@@ -94,9 +97,8 @@ public class JdbcUserRepositoryTest {
     void delete_shouldRemoveUser() {
         User savedUser = userRepository.save(testUser);
 
-        String result = userRepository.delete(savedUser);
+        userRepository.deleteById(savedUser.getId());
 
-        assertThat(result).isEqualTo("Пользователь " + savedUser.getId() + " удалён");
         assertThatThrownBy(() -> userRepository.getUserById(savedUser.getId()))
                 .isInstanceOf(NotFoundException.class);
     }

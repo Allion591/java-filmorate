@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.lang.NonNull;
-
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.TreeSet;
@@ -38,5 +37,13 @@ public class User {
         this.email = email;
         this.login = login;
         this.birthday = birthday;
+    }
+
+    public void setName(String name) {
+        this.name = (name == null || name.isBlank()) ? null : name;
+    }
+
+    public String getName() {
+        return (name == null || name.isBlank()) ? login : name;
     }
 }

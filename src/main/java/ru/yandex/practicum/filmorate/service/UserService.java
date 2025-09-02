@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.interfaces.UserRepository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.JdbcFriendRepository;
@@ -21,15 +22,13 @@ public class UserService {
         this.friendRepository = friendRepository;
     }
 
-    public String addFriend(Long userId, Long anotherUserId) {
+    public void addFriend(Long userId, Long anotherUserId) {
         log.info("Добавление друга");
         friendRepository.addFriend(userId, anotherUserId);
-        return "Пользователь с ид " + userId + " и пользователь с ид " + anotherUserId + " теперь друзья!";
     }
 
-    public String removeFriend(Long userId, Long anotherUserId) {
+    public void removeFriend(Long userId, Long anotherUserId) {
         friendRepository.removeFriend(userId, anotherUserId);
-        return "Пользователь c ID" + anotherUserId + " теперь вам не друг";
     }
 
     public Collection<User> getFriends(Long userId) {
@@ -49,8 +48,11 @@ public class UserService {
         return userRepository.update(user);
     }
 
-    public String delete(User user) {
-        return userRepository.delete(user);
+    @Transactional
+    public void delete(Long userId) {
+        log.info("Удаление пользователя с id={}", userId);
+        userRepository.deleteById(userId);
+        log.info("Пользователь с id={} удалён", userId);
     }
 
     public Collection<User> findAll() {
