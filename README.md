@@ -1,5 +1,23 @@
 # java-filmorate
-Template repository for Filmorate project.
+Полноценное REST API с 12 эндпоинтами, соответствующее принципам семантики HTTP-методов и ресурсно-ориентированного дизайна.
+
+## Технологии
+- Java
+- Maven
+- Spring Boot
+- SQL (PostgreSQL / H2)
+
+## Структура проекта
+- `pom.xml` — конфигурация Maven
+- `src/main/java` — исходный код приложения (контроллеры, сервисы, репозитории)
+- `src/main/resources` — конфигурация (`application.yml` / `application.properties`)
+- `src/test` — модульные тесты
+
+## Требования
+- JDK 17+
+- Maven 3.6+
+- Запущенная СУБД (Postgres) с созданной БД
+- IntelliJ IDEA (рекомендуется для разработки на Windows)
 
 ![](schema.png)
 1. Таблица users (Пользователи)
